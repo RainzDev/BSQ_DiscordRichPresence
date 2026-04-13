@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/QuestPackageManager/QPM.Package/refs/heads/main/qpm.schema.json",
+  "version": "0.1.0",
+  "sharedDir": "shared",
+  "dependenciesDir": "extern",
+  "info": {
+    "name": "Discord Rich Presence",
+    "id": "discordrichpresence",
+    "version": "0.1.0",
+    "url": null,
+    "additionalData": {
+      "overrideSoName": "libdiscordrichpresense.so",
+      "cmake": true
+    }
+  },
+  "workspace": {
+    "scripts": {
+      "build": [
+        "python ./extern/includes/mod-scripts/shared/build.py $0:?"
+      ],
+      "copy": [
+        "python ./extern/includes/mod-scripts/shared/cpy.py $0:?"
+      ],
+      "dbg": [
+        "python ./extern/includes/mod-scripts/shared/dbg.py $0:?"
+      ],
+      "log": [
+        "python ./extern/includes/mod-scripts/shared/log.py $0:?"
+      ],
+      "profile": [
+        "python ./extern/includes/mod-scripts/shared/profile.py $0:?"
+      ],
+      "restart": [
+        "python ./extern/includes/mod-scripts/shared/restart.py $0:?"
+      ]
+    },
+    "ndk": "^28.2.13676358",
+    "qmodIncludeDirs": [
+      "./build",
+      "./extern/libs",
+      "."
+    ],
+    "qmodIncludeFiles": [],
+    "qmodOutput": "./DiscordRichPresense.qmod"
+  },
+  "dependencies": [
+    {
+      "id": "mod-scripts",
+      "versionRange": "^1.0.0",
+      "additionalData": {}
+    },
+    {
+      "id": "scotland2",
+      "versionRange": "^0.1.7",
+      "additionalData": {
+        "includeQmod": false
+      }
+    },
+    {
+      "id": "paper2_scotland2",
+      "versionRange": "^4.7.0",
+      "additionalData": {}
+    },
+    {
+      "id": "beatsaber-hook",
+      "versionRange": "^6.4.2",
+      "additionalData": {}
+    },
+    {
+      "id": "bs-cordl",
+      "versionRange": "^4008.0.0",
+      "additionalData": {}
+    },
+    {
+      "id": "web-utils",
+      "versionRange": "^0.6.8",
+      "additionalData": {}
+    },
+    {
+      "id": "config-utils",
+      "versionRange": "^2.0.3",
+      "additionalData": {}
+    },
+    {
+      "id": "bsml",
+      "versionRange": "^0.4.9",
+      "additionalData": {}
+    },
+    {
+      "id": "custom-types",
+      "versionRange": "^0.18.4",
+      "additionalData": {}
+    }
+  ]
+}

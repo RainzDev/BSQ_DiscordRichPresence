@@ -1,0 +1,335 @@
+// Include our main header file, containing the logger
+#include "main.hpp"
+#include "nlohmann/json.hpp"
+#include "config.hpp"
+
+#include "nlohmann/json_fwd.hpp"
+#include "web-utils/shared/WebUtils.hpp"
+
+#include "bsml/shared/BSML.hpp"
+
+#include <span>
+#include <cstdint>
+
+// Include dependency headers
+#include "scotland2/shared/modloader.h"
+#include "beatsaber-hook/shared/utils/typedefs.h"
+#include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
+#include "beatsaber-hook/shared/utils/utils.h"
+#include "GlobalNamespace/MainFlowCoordinator.hpp"
+#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "beatsaber-hook/shared/utils/typedefs.h"
+#include "beatsaber-hook/shared/config/config-utils.hpp"
+#include "beatsaber-hook/shared/utils/hooking.hpp"
+#include <iostream>
+
+#include "UnityEngine/Resources.hpp"
+
+#include "System/Action_1.hpp"
+#include <string>
+#include <string_view>
+#include <thread>
+
+
+#include "GlobalNamespace/ResultsViewController.hpp"
+#include "GlobalNamespace/LevelCompletionResults.hpp"
+#include "GlobalNamespace/IConnectedPlayer.hpp"
+#include "GlobalNamespace/MultiplayerPlayersManager.hpp"
+#include "GlobalNamespace/MultiplayerSessionManager.hpp"
+#include "GlobalNamespace/GameServerLobbyFlowCoordinator.hpp"
+#include "GlobalNamespace/PracticeSettings.hpp"
+#include "GlobalNamespace/StandardLevelDetailView.hpp"
+#include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
+#include "GlobalNamespace/LevelSelectionFlowCoordinator.hpp"
+#include "GlobalNamespace/BeatmapLevel.hpp"
+#include "GlobalNamespace/IReadonlyBeatmapData.hpp"
+#include "GlobalNamespace/MultiplayerLocalActivePlayerGameplayManager.hpp"
+#include "GlobalNamespace/StandardLevelGameplayManager.hpp"
+#include "GlobalNamespace/TutorialSongController.hpp"
+#include "GlobalNamespace/MissionLevelScenesTransitionSetupDataSO.hpp"
+#include "GlobalNamespace/MissionLevelGameplayManager.hpp"
+#include "GlobalNamespace/PauseController.hpp"
+#include "GlobalNamespace/MenuDestination.hpp"
+#include "GlobalNamespace/AudioTimeSyncController.hpp"
+#include "GlobalNamespace/MenuTransitionsHelper.hpp"
+#include "GlobalNamespace/BeatmapDifficulty.hpp"
+#include "GlobalNamespace/ILobbyPlayersDataModel.hpp"
+#include "GlobalNamespace/BeatmapDifficulty.hpp"
+#include "GlobalNamespace/LobbyPlayersDataModel.hpp"
+#include "System/Collections/Generic/IReadOnlyDictionary_2.hpp"
+
+using namespace GlobalNamespace;
+
+// Store the mod ID and version, so it can be sent to the modloader at startup
+static modloader::ModInfo modInfo{MOD_ID, VERSION, 0};
+
+std::string difficultyToString(BeatmapDifficulty difficulty)
+{
+    switch (difficulty)
+    {
+    case BeatmapDifficulty::Easy:
+        return "Easy";
+    case BeatmapDifficulty::Normal:
+        return "Normal";
+    case BeatmapDifficulty::Hard:
+        return "Hard";
+    case BeatmapDifficulty::Expert:
+        return "Expert";
+    case BeatmapDifficulty::ExpertPlus:
+        return "Expert+";
+    }
+    return "Unknown";
+}
+
+void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    if (!firstActivation)
+        return;
+
+    auto container = BSML::Lite::CreateScrollableSettingsContainer(self);
+
+    BSML::Lite::CreateText(self, "Private IP");
+    AddConfigValueInputString(container, getConfig().PCIPSetting);
+
+    BSML::Lite::CreateText(self, "Port");
+    AddConfigValueInputString(container, getConfig().PortSetting);
+}
+
+void CreateRequest(std::string jsonStr) {
+    std::thread([jsonStr] {
+        std::string getIp = getConfig().PCIPSetting.GetValue();
+        std::string getPort = getConfig().PortSetting.GetValue();
+
+        std::string URL = "http://" + getIp + ":" + getPort + "/sendData";
+
+        auto path = WebUtils::URLOptions{ URL };
+        path.noEscape = true;
+        
+        std::span<const uint8_t> body(
+            reinterpret_cast<const uint8_t*>(jsonStr.data()),
+            jsonStr.size()
+        );
+
+        auto response = WebUtils::PostAsync<WebUtils::StringResponse>(path, body);
+
+        response.wait();
+
+        auto responseValue = response.get();
+
+        logger.info("Attempted to send post request to {} with result of status code {}, and curl status being {}", path.fullURl(), std::to_string(responseValue.get_HttpCode()), std::to_string(responseValue.get_CurlStatus()));
+
+        bool success = responseValue.IsSuccessful();
+        if (!success) {
+            logger.debug("Failed to get response");
+            return;
+        }
+    }).detach();
+}
+
+MAKE_HOOK_MATCH(LevelSelectionFlowCoordinator_DidActivate, &GlobalNamespace::LevelSelectionFlowCoordinator::DidActivate, void, GlobalNamespace::LevelSelectionFlowCoordinator* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    LevelSelectionFlowCoordinator_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+
+    nlohmann::json data;
+    data["type"] = "LevelSelectionMenuInitialized";
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
+MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate,
+    &GlobalNamespace::MainFlowCoordinator::DidActivate,
+    void,
+    GlobalNamespace::MainFlowCoordinator* self,
+    bool firstActivation,
+    bool addedToHierarchy,
+    bool screenSystemEnabling) {
+
+    MainFlowCoordinator_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+
+    nlohmann::json data;
+    data["type"] = "MainMenuInitialized";
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
+MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel, // hook name
+                static_cast<void (MenuTransitionsHelper::*)(
+                    ::StringW, 
+                    ByRef<BeatmapKey>,  // 确保使用 ByRef
+                    BeatmapLevel*, 
+                    OverrideEnvironmentSettings*, 
+                    ColorScheme*, 
+                    bool,
+                    ColorScheme*, 
+                    GameplayModifiers*, 
+                    PlayerSpecificSettings*, 
+                    PracticeSettings*, 
+                    EnvironmentsListModel*, 
+                    ::StringW, 
+                    bool, 
+                    bool, 
+                    System::Action*, 
+                    System::Action_1<::Zenject::DiContainer*>*, 
+                    System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>, 
+                                     LevelCompletionResults*>*, 
+                    System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>, 
+                                     LevelCompletionResults*>*, 
+                    System::Nullable_1<RecordingToolManager_SetupData>
+                )>(&MenuTransitionsHelper::StartStandardLevel),//func signature
+                void,//func return
+                MenuTransitionsHelper *self,
+                ::StringW gameMode, 
+                ByRef<BeatmapKey> beatmapKey,
+                BeatmapLevel* beatmapLevel,  
+                OverrideEnvironmentSettings* overrideEnvironmentSettings,
+                ColorScheme* overrideColorScheme, 
+                bool playerOverrideLightshowColors,
+                ColorScheme* beatmapOverrideColorScheme,
+                GameplayModifiers* gameplayModifiers, 
+                PlayerSpecificSettings* playerSpecificSettings,
+                PracticeSettings* practiceSettings, 
+                EnvironmentsListModel* environmentsListModel, 
+                ::StringW backButtonText,
+                bool useTestNoteCutSoundEffects, 
+                bool startPaused, 
+                ::System::Action* beforeSceneSwitchToGameplayCallback, 
+                ::System::Action_1<::Zenject::DiContainer*>* afterSceneSwitchToGameplayCallback,
+                ::System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>, LevelCompletionResults*>* levelFinishedCallback,
+                ::System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>, LevelCompletionResults*>* levelRestartedCallback,
+                ::System::Nullable_1<RecordingToolManager_SetupData> recordingToolData
+)
+{
+    MenuTransitionsHelper_StartStandardLevel(
+        self,
+        gameMode,
+        beatmapKey,
+        beatmapLevel,
+        overrideEnvironmentSettings,
+        overrideColorScheme,
+        playerOverrideLightshowColors,
+        beatmapOverrideColorScheme,
+        gameplayModifiers,
+        playerSpecificSettings,
+        practiceSettings,
+        environmentsListModel,
+        backButtonText,
+        useTestNoteCutSoundEffects,
+        startPaused,
+        beforeSceneSwitchToGameplayCallback,
+        afterSceneSwitchToGameplayCallback,
+        levelFinishedCallback,
+        levelRestartedCallback,
+        recordingToolData
+    );
+
+    BeatmapLevel *level = self->____standardLevelScenesTransitionSetupData->get_beatmapLevel();
+    BeatmapDifficulty difficulty = beatmapKey->difficulty;
+
+    if (!level)
+    {
+        logger.info("Level not found");
+        return;
+    }
+
+    nlohmann::json data;
+    data["type"] = "BeatmapInitialized";
+    data["title"] = level->songName;
+    data["author"] = level->songAuthorName;
+    data["duration"] = level->songDuration;
+    data["mappers"] = level->allMappers;
+    data["difficulty"] = difficultyToString(difficulty);
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
+
+MAKE_HOOK_MATCH(PauseController_Pause, &PauseController::Pause, void, PauseController *self) {
+    PauseController_Pause(self);
+
+    nlohmann::json data;
+    data["type"] = "BeatmapPaused";
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
+MAKE_HOOK_MATCH(PauseController_HandlePauseMenuManagerDidPressContinueButton, &PauseController::HandlePauseMenuManagerDidPressContinueButton, void, PauseController *self) {
+    PauseController_HandlePauseMenuManagerDidPressContinueButton(self);
+
+    nlohmann::json data;
+    data["type"] = "BeatmapResumed";
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
+MAKE_HOOK_MATCH(StandardLevelGameplayManager_HandleGameEnergyDidReach0, &StandardLevelGameplayManager::HandleGameEnergyDidReach0, void, StandardLevelGameplayManager *self) {
+    StandardLevelGameplayManager_HandleGameEnergyDidReach0(self);
+
+    nlohmann::json data;
+    data["type"] = "BeatmapFailed";
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
+MAKE_HOOK_MATCH(ResultsViewController_DidActivate, &ResultsViewController::DidActivate, void, ResultsViewController *self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    ResultsViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+
+    auto results = self->_levelCompletionResults;
+    auto level = self->____beatmapLevel;
+    auto difficulty = self->____beatmapKey.difficulty;
+
+    if (results && results->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared) {
+        nlohmann::json data;
+        data["type"] = "BeatmapCleared";
+        data["title"] = level->___songName;
+        data["author"] = level->songAuthorName;
+        data["duration"] = level->songDuration;
+        data["mappers"] = level->allMappers;
+        data["difficulty"] = difficultyToString(difficulty);
+
+        std::string jsonStr = data.dump();
+
+        CreateRequest(jsonStr);
+    }
+}
+
+// Called in the early stages of game loading
+// (see https://github.com/sc2ad/scotland2?tab=readme-ov-file#installationusage)
+// Often used to initialize and load configs, in addition to its contents here
+extern "C" void setup(CModInfo* info) noexcept {
+    *info = modInfo.to_c();
+
+    // Register our logger so that all its messages are stored in a file
+    Paper::Logger::RegisterFileContextId(MOD_ID);
+    BSML::Init();
+
+    getConfig().Init(modInfo);
+    BSML::Register::RegisterSettingsMenu("DRP", DidActivate, true);
+    
+
+    logger.info("Completed setup!");
+}
+
+// Called later on in the game loading, after all mods have been opened
+// Often used to install hooks and use the APIs of other mods or libraries
+extern "C" void late_load() noexcept {
+    il2cpp_functions::Init();
+    logger.info("Installing hooks");
+    INSTALL_HOOK(logger, LevelSelectionFlowCoordinator_DidActivate);
+    INSTALL_HOOK(logger, MenuTransitionsHelper_StartStandardLevel);
+    INSTALL_HOOK(logger, PauseController_Pause);
+    INSTALL_HOOK(logger, PauseController_HandlePauseMenuManagerDidPressContinueButton);
+    INSTALL_HOOK(logger, MainFlowCoordinator_DidActivate);
+    INSTALL_HOOK(logger, StandardLevelGameplayManager_HandleGameEnergyDidReach0);
+    INSTALL_HOOK(logger, ResultsViewController_DidActivate);
+    logger.info("Completed load!");
+}
