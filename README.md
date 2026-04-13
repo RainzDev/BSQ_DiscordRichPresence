@@ -2,18 +2,49 @@
 
 A Beat Saber Quest mod for displaying status on Discord
 
-## Configuration
+## 📋 Requirements
 
-Navigate in-game to configure the mod:
+- ✅ Modded Beat Saber Quest (BMBF / QuestPatcher)
+- ✅ Local server handling Discord Rich Presence updates
+- ✅ Same network connection (Quest ↔ PC)
+- ✅ Node.js 14+ (for example server)
 
+---
+
+## 🚀 Quick Start
+
+### 1. Install the Mod
+
+Download and install the mod using your preferred Quest mod manager:
+
+```bash
+# BMBF
+# Upload to BMBF via web interface
+
+# QuestPatcher
+# Install via QuestPatcher GUI
 ```
-Settings → Mod Settings → DRP
+
+### 2. Setup Local Server
+
+WIP
+
+### 3. Start the Server
+
+```bash
+node server.js
 ```
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| **Private IP** | Your PC's local network IP | `192.168.x.x` |
-| **Port** | Server port number | `8080` |
+### 4. Configure the Mod
+
+1. Open Beat Saber on your Quest
+2. Go to `Settings → Mod Settings → DRP`
+3. Enter your PC's private IP and port
+4. Save and restart Beat Saber
+
+### 5. Verify Connection
+
+Check your server console — you should see events appearing as you play!
 
 ## Finding Your Private IP
 
