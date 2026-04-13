@@ -1,6 +1,60 @@
-# #{name}
+# DiscordRichPresence
 
-#{description}
+A Beat Saber Quest mod for displaying status on Discord
+
+## Configuration
+
+Navigate in-game to configure the mod:
+
+```
+Settings → Mod Settings → DRP
+```
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Private IP** | Your PC's local network IP | `192.168.x.x` |
+| **Port** | Server port number | `8080` |
+
+## Finding Your Private IP
+
+<details>
+<summary><b>🪟 Windows (CMD)</b></summary>
+
+```bash
+ipconfig
+```
+
+**Look for:**
+```
+IPv4 Address . . . . . . . . . . : 192.168.x.x
+```
+</details>
+
+<details>
+<summary><b>🍎 macOS (Terminal)</b></summary>
+
+```bash
+ifconfig
+```
+
+**Look for:**
+```
+inet 192.168.x.x (under active interface, usually en0)
+```
+</details>
+
+<details>
+<summary><b>🐧 Linux</b></summary>
+
+```bash
+ip a
+```
+
+**Look for:**
+```
+inet 192.168.x.x/24
+```
+</details>
 
 ## Building
 
