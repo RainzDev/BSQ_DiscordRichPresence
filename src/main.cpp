@@ -31,6 +31,8 @@
 #include <thread>
 
 
+#include "GlobalNamespace/PauseMenuManager.hpp"
+#include "GlobalNamespace/LevelSelectionNavigationController.hpp"
 #include "GlobalNamespace/ResultsViewController.hpp"
 #include "GlobalNamespace/LevelCompletionResults.hpp"
 #include "GlobalNamespace/IConnectedPlayer.hpp"
@@ -60,6 +62,8 @@
 
 using namespace GlobalNamespace;
 
+static bool skipNextActivation = false;
+
 // Store the mod ID and version, so it can be sent to the modloader at startup
 static modloader::ModInfo modInfo{MOD_ID, VERSION, 0};
 
@@ -87,10 +91,7 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
 
     auto container = BSML::Lite::CreateScrollableSettingsContainer(self);
 
-    BSML::Lite::CreateText(self, "Private IP");
     AddConfigValueInputString(container, getConfig().PCIPSetting);
-
-    BSML::Lite::CreateText(self, "Port");
     AddConfigValueInputString(container, getConfig().PortSetting);
 }
 
@@ -125,15 +126,25 @@ void CreateRequest(std::string jsonStr) {
     }).detach();
 }
 
+
 MAKE_HOOK_MATCH(LevelCollectionViewController_DidActivate, &GlobalNamespace::LevelCollectionViewController::DidActivate, void, GlobalNamespace::LevelCollectionViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     LevelCollectionViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
+    if (skipNextActivation) {
+        skipNextActivation = false;
+        return;
+    }
+
+    // Optional: only fire when actually visible
+    if (!screenSystemEnabling) return;
+    
     nlohmann::json data;
     data["type"] = "LevelSelectionMenuInitialized";
 
     std::string jsonStr = data.dump();
 
     CreateRequest(jsonStr);
+    
 }
 
 MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate,
@@ -233,6 +244,8 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel, // hook name
         return;
     }
 
+    skipNextActivation = true;
+
     nlohmann::json data;
     data["type"] = "BeatmapInitialized";
     data["title"] = level->songName;
@@ -267,6 +280,14 @@ MAKE_HOOK_MATCH(PauseController_HandlePauseMenuManagerDidPressContinueButton, &P
     std::string jsonStr = data.dump();
 
     CreateRequest(jsonStr);
+}
+
+MAKE_HOOK_MATCH(PauseMenuManager_MenuButtonPressed, &PauseMenuManager::MenuButtonPressed, void, PauseMenuManager *self) {
+
+    PauseMenuManager_MenuButtonPressed(self);
+
+    // Prevent incorrect skip later
+    skipNextActivation = false;
 }
 
 MAKE_HOOK_MATCH(StandardLevelGameplayManager_HandleGameEnergyDidReach0, &StandardLevelGameplayManager::HandleGameEnergyDidReach0, void, StandardLevelGameplayManager *self) {
@@ -324,6 +345,7 @@ extern "C" void setup(CModInfo* info) noexcept {
 extern "C" void late_load() noexcept {
     il2cpp_functions::Init();
     logger.info("Installing hooks");
+    INSTALL_HOOK(logger, PauseMenuManager_MenuButtonPressed);
     INSTALL_HOOK(logger, LevelCollectionViewController_DidActivate);
     INSTALL_HOOK(logger, MenuTransitionsHelper_StartStandardLevel);
     INSTALL_HOOK(logger, PauseController_Pause);
