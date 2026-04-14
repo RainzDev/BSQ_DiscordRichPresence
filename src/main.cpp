@@ -40,7 +40,7 @@
 #include "GlobalNamespace/PracticeSettings.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
 #include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
-#include "GlobalNamespace/LevelSelectionFlowCoordinator.hpp"
+#include "GlobalNamespace/LevelCollectionViewController.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/MultiplayerLocalActivePlayerGameplayManager.hpp"
@@ -125,8 +125,8 @@ void CreateRequest(std::string jsonStr) {
     }).detach();
 }
 
-MAKE_HOOK_MATCH(LevelSelectionFlowCoordinator_DidActivate, &GlobalNamespace::LevelSelectionFlowCoordinator::DidActivate, void, GlobalNamespace::LevelSelectionFlowCoordinator* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
-    LevelSelectionFlowCoordinator_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+MAKE_HOOK_MATCH(LevelCollectionViewController_DidActivate, &GlobalNamespace::LevelCollectionViewController::DidActivate, void, GlobalNamespace::LevelCollectionViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    LevelCollectionViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
     nlohmann::json data;
     data["type"] = "LevelSelectionMenuInitialized";
@@ -324,7 +324,7 @@ extern "C" void setup(CModInfo* info) noexcept {
 extern "C" void late_load() noexcept {
     il2cpp_functions::Init();
     logger.info("Installing hooks");
-    INSTALL_HOOK(logger, LevelSelectionFlowCoordinator_DidActivate);
+    INSTALL_HOOK(logger, LevelCollectionViewController_DidActivate);
     INSTALL_HOOK(logger, MenuTransitionsHelper_StartStandardLevel);
     INSTALL_HOOK(logger, PauseController_Pause);
     INSTALL_HOOK(logger, PauseController_HandlePauseMenuManagerDidPressContinueButton);

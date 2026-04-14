@@ -39,8 +39,8 @@ node server.js
 
 1. Open Beat Saber on your Quest
 2. Go to `Settings → Mod Settings → DRP`
-3. Enter your PC's private IP and port
-4. Save and restart Beat Saber
+3. Enter your PC's private IP and port (Leave port as it is unless you know what you're doing)
+4. Press "Ok"
 
 ### 5. Verify Connection
 
