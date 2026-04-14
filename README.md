@@ -17,13 +17,8 @@ A Beat Saber Quest mod for displaying status on Discord
 
 Download and install the mod using your preferred Quest mod manager:
 
-```bash
-# BMBF
-# Upload to BMBF via web interface
-
-# QuestPatcher
-# Install via QuestPatcher GUI
-```
+- Install via [MBF](https://mbf.bsquest.xyz/)
+- Install via [QuestPatcher GUI](https://github.com/Lauriethefish/QuestPatcher)
 
 ### 2. Setup Local Server
 
