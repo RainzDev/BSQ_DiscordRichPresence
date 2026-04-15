@@ -86,13 +86,22 @@ std::string difficultyToString(BeatmapDifficulty difficulty)
 }
 
 void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
-    if (!firstActivation)
-        return;
-
     auto container = BSML::Lite::CreateScrollableSettingsContainer(self);
 
-    AddConfigValueInputString(container, getConfig().PCIPSetting);
-    AddConfigValueInputString(container, getConfig().PortSetting);
+    auto ipLayout = BSML::Lite::CreateHorizontalLayoutGroup(container);
+    auto portLayout = BSML::Lite::CreateHorizontalLayoutGroup(container);
+
+    auto ipLabel = BSML::Lite::CreateText(ipLayout, "Private IP");
+    auto ipInput = BSML::Lite::CreateStringSetting(ipLayout, "", getConfig().PCIPSetting.GetValue(), {}, {}, [](StringW val) {
+        getConfig().PCIPSetting.SetValue(val);
+    });
+
+    // ipLabel->get_rectTransform()->set_anchoredPosition(UnityEngine::Vector2(0, -2.0f));
+
+    auto portLabel = BSML::Lite::CreateText(portLayout, "Port");
+    auto portInput = BSML::Lite::CreateStringSetting(portLayout, "", getConfig().PortSetting.GetValue(), {}, {}, [](StringW val) {
+        getConfig().PortSetting.SetValue(val);
+    });
 }
 
 void CreateRequest(std::string jsonStr) {
@@ -125,7 +134,6 @@ void CreateRequest(std::string jsonStr) {
         }
     }).detach();
 }
-
 
 MAKE_HOOK_MATCH(LevelCollectionViewController_DidActivate, &GlobalNamespace::LevelCollectionViewController::DidActivate, void, GlobalNamespace::LevelCollectionViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     LevelCollectionViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
