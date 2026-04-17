@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "UnityEngine/Resources.hpp"
+#include "UnityEngine/Application.hpp"
 
 #include "System/Action_1.hpp"
 #include <string>
@@ -91,15 +92,11 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
     auto ipLayout = BSML::Lite::CreateHorizontalLayoutGroup(container);
     auto portLayout = BSML::Lite::CreateHorizontalLayoutGroup(container);
 
-    auto ipLabel = BSML::Lite::CreateText(ipLayout, "Private IP");
-    auto ipInput = BSML::Lite::CreateStringSetting(ipLayout, "", getConfig().PCIPSetting.GetValue(), {}, {}, [](StringW val) {
+    auto ipInput = BSML::Lite::CreateStringSetting(ipLayout, "Private IP", getConfig().PCIPSetting.GetValue(), {}, {}, [](StringW val) {
         getConfig().PCIPSetting.SetValue(val);
     });
 
-    // ipLabel->get_rectTransform()->set_anchoredPosition(UnityEngine::Vector2(0, -2.0f));
-
-    auto portLabel = BSML::Lite::CreateText(portLayout, "Port");
-    auto portInput = BSML::Lite::CreateStringSetting(portLayout, "", getConfig().PortSetting.GetValue(), {}, {}, [](StringW val) {
+    auto portInput = BSML::Lite::CreateStringSetting(portLayout, "Port", getConfig().PortSetting.GetValue(), {}, {}, [](StringW val) {
         getConfig().PortSetting.SetValue(val);
     });
 }
@@ -134,6 +131,10 @@ void CreateRequest(std::string jsonStr) {
         }
     }).detach();
 }
+
+// MAKE_HOOK_MATCH(Application_Quit, UnityEngine::Application::quitting, void, UnityEngine::Application* self) {
+//     logger.info("tets");
+// }
 
 MAKE_HOOK_MATCH(LevelCollectionViewController_DidActivate, &GlobalNamespace::LevelCollectionViewController::DidActivate, void, GlobalNamespace::LevelCollectionViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     LevelCollectionViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
