@@ -24,7 +24,8 @@
 #include <iostream>
 
 #include "UnityEngine/Resources.hpp"
-#include "UnityEngine/Application.hpp"
+#include "GlobalNamespace/MultiplayerSessionManager.hpp"
+
 
 #include "System/Action_1.hpp"
 #include <string>
@@ -132,9 +133,33 @@ void CreateRequest(std::string jsonStr) {
     }).detach();
 }
 
-// MAKE_HOOK_MATCH(Application_Quit, UnityEngine::Application::quitting, void, UnityEngine::Application* self) {
-//     logger.info("tets");
-// }
+MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerConnected, &MultiplayerSessionManager::HandlePlayerConnected, void, GlobalNamespace::MultiplayerSessionManager* self, GlobalNamespace::IConnectedPlayer* player) {
+    MultiplayerSessionManager_HandlePlayerConnected(self, player);
+
+    auto getCount = self->get_connectedPlayerCount();
+
+    nlohmann::json data;
+    data["type"] = "LobbyPlayerOnConnect";
+    data["playerCount"] = getCount;
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
+MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerDisconnected, &MultiplayerSessionManager::HandlePlayerDisconnected, void, GlobalNamespace::MultiplayerSessionManager* self, GlobalNamespace::IConnectedPlayer* player) {
+    MultiplayerSessionManager_HandlePlayerDisconnected(self, player);
+
+    auto getCount = self->get_connectedPlayerCount();
+
+    nlohmann::json data;
+    data["type"] = "LobbyPlayerOnConnect";
+    data["playerCount"] = getCount;
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
 
 MAKE_HOOK_MATCH(LevelCollectionViewController_DidActivate, &GlobalNamespace::LevelCollectionViewController::DidActivate, void, GlobalNamespace::LevelCollectionViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     LevelCollectionViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
@@ -356,6 +381,8 @@ extern "C" void late_load() noexcept {
     logger.info("Installing hooks");
     INSTALL_HOOK(logger, PauseMenuManager_MenuButtonPressed);
     INSTALL_HOOK(logger, LevelCollectionViewController_DidActivate);
+    INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerConnected);
+    INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerDisconnected);
     INSTALL_HOOK(logger, MenuTransitionsHelper_StartStandardLevel);
     INSTALL_HOOK(logger, PauseController_Pause);
     INSTALL_HOOK(logger, PauseController_HandlePauseMenuManagerDidPressContinueButton);

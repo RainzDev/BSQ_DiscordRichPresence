@@ -20,15 +20,32 @@ Download and install the mod using your preferred Quest mod manager:
 - Install via [MBF](https://mbf.bsquest.xyz/)
 - Install via [QuestPatcher GUI](https://github.com/Lauriethefish/QuestPatcher)
 
-### 2. Setup Local Server
+### 2. Install Local Server
 
-WIP
+Go to [latest releases](https://github.com/RainzDev/BSQ_DiscordRichPresence/releases) and install the zip file corresponding to your OS.
 
 ### 3. Start the Server
 
+<details>
+<summary><b>🪟 Windows (CMD)</b></summary>
+
+WIP
+</details>
+
+<details>
+<summary><b>🍎 macOS (Terminal)</b></summary>
+
+WIP
+</details>
+
+<details>
+<summary><b>🐧 Linux</b></summary>
+
 ```bash
-node server.js
+chmod +x run.sh
+./run.sh
 ```
+</details>
 
 ### 4. Configure the Mod
 
