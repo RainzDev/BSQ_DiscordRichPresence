@@ -7,7 +7,6 @@ A Beat Saber Quest mod for displaying status on Discord
 - ✅ Modded Beat Saber Quest (MBF / QuestPatcher)
 - ✅ Local server handling Discord Rich Presence updates
 - ✅ Same network connection (Quest ↔ PC)
-- ✅ Node.js 14+ (for example server)
 
 ---
 
