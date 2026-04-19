@@ -9,7 +9,7 @@
     "version": "0.1.0",
     "url": null,
     "additionalData": {
-      "overrideSoName": "libdiscordrichpresense.so",
+      "overrideSoName": "libdiscordrichpresence.so",
       "cmake": true
     }
   },
@@ -41,7 +41,7 @@
       "."
     ],
     "qmodIncludeFiles": [],
-    "qmodOutput": "./DiscordRichPresense.qmod"
+    "qmodOutput": "./DiscordRichPresence.qmod"
   },
   "dependencies": [
     {
