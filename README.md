@@ -21,6 +21,10 @@ Download and install the mod using your preferred Quest mod manager:
 
 ### 2. Install Local Server
 
+- For Linux: [Download Here](https://github.com/RainzDev/BeatSaberBridgeAPI/releases/download/v1.1.0/bridgeapi-linux)
+- For Windows: [Download Here](https://github.com/RainzDev/BeatSaberBridgeAPI/releases/download/v1.1.0/bridgeapi-windows.exe)
+- For MacOS: [Download Here](https://github.com/RainzDev/BeatSaberBridgeAPI/releases/download/v1.1.0/bridgeapi-macos)
+
 Go to [latest releases](https://github.com/RainzDev/BSQ_DiscordRichPresence/releases) and install the zip file corresponding to your OS.
 
 ### 3. Start the Server
@@ -28,21 +32,24 @@ Go to [latest releases](https://github.com/RainzDev/BSQ_DiscordRichPresence/rele
 <details>
 <summary><b>🪟 Windows (CMD)</b></summary>
 
-WIP
+You can simply just double click the exe file to open it. (Please note that Windows Defender might flag it. This is due to the file not having a certificate.)
 </details>
 
 <details>
 <summary><b>🍎 macOS (Terminal)</b></summary>
 
-WIP
+```bash
+chmod +x bridgeapi-macos
+./bridgeapi-macos
+```
 </details>
 
 <details>
 <summary><b>🐧 Linux</b></summary>
 
 ```bash
-chmod +x run.sh
-./run.sh
+chmod +x bridgeapi-linux
+./bridgeapi-linux
 ```
 </details>
 
