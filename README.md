@@ -27,6 +27,8 @@ Download and install the mod using your preferred Quest mod manager:
 
 ### 3. Start the Server
 
+Note: Please make sure your Discord app is opened.
+
 <details>
 <summary><b>🪟 Windows (CMD)</b></summary>
 
