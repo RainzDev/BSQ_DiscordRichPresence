@@ -90,18 +90,13 @@ std::string difficultyToString(BeatmapDifficulty difficulty)
 }
 
 void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    if (!firstActivation)
+        return;
+
     auto container = BSML::Lite::CreateScrollableSettingsContainer(self);
 
-    auto ipLayout = BSML::Lite::CreateHorizontalLayoutGroup(container);
-    auto portLayout = BSML::Lite::CreateHorizontalLayoutGroup(container);
-
-    auto ipInput = BSML::Lite::CreateStringSetting(ipLayout, "Private IP", getConfig().PCIPSetting.GetValue(), {}, {}, [](StringW val) {
-        getConfig().PCIPSetting.SetValue(val);
-    });
-
-    auto portInput = BSML::Lite::CreateStringSetting(portLayout, "Port", getConfig().PortSetting.GetValue(), {}, {}, [](StringW val) {
-        getConfig().PortSetting.SetValue(val);
-    });
+    AddConfigValueInputString(container, getConfig().PCIPSetting);
+    AddConfigValueInputString(container, getConfig().PortSetting);
 
     BSML::Lite::CreateUIButton(container, "Open Instructions", []() {
         UnityEngine::Application::OpenURL("https://github.com/RainzDev/BSQ_DiscordRichPresence#-quick-start");
@@ -454,6 +449,7 @@ extern "C" EXPORT void late_load() noexcept {
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerConnected);
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerDisconnected);
     INSTALL_HOOK(logger, MenuTransitionsHelper_StartStandardLevel);
+    INSTALL_HOOK(logger, MenuTransitionsHelper_StartMultiplayerLevel);
     INSTALL_HOOK(logger, PauseController_Pause);
     INSTALL_HOOK(logger, PauseController_HandlePauseMenuManagerDidPressContinueButton);
     INSTALL_HOOK(logger, MainFlowCoordinator_DidActivate);

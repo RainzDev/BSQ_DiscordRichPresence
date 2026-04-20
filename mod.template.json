@@ -7,7 +7,13 @@
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.40.8_7379",
   "description": "A Beat Saber Quest mod for displaying stats on Discord",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "version": "1.0.4*",
+      "id": "morebuttons",
+      "downloadIfMissing": "https://github.com/Metalit/MoreButtons/releases/download/v1.0.4/MoreButtons.qmod"
+    }
+  ],
   "modFiles": [],
   "lateModFiles": [],
   "libraryFiles": [],
