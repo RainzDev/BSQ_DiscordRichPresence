@@ -25,8 +25,6 @@
 
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/Application.hpp"
-#include "GlobalNamespace/MultiplayerSessionManager.hpp"
-
 
 #include "System/Action_1.hpp"
 #include <string>
@@ -41,6 +39,7 @@
 #include "GlobalNamespace/IConnectedPlayer.hpp"
 #include "GlobalNamespace/MultiplayerPlayersManager.hpp"
 #include "GlobalNamespace/MultiplayerSessionManager.hpp"
+#include "GlobalNamespace/MultiplayerLevelScenesTransitionSetupDataSO.hpp"
 #include "GlobalNamespace/GameServerLobbyFlowCoordinator.hpp"
 #include "GlobalNamespace/PracticeSettings.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
@@ -204,10 +203,10 @@ MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate,
     CreateRequest(jsonStr);
 }
 
-MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel, // hook name
+MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
                 static_cast<void (MenuTransitionsHelper::*)(
                     ::StringW, 
-                    ByRef<BeatmapKey>,  // 确保使用 ByRef
+                    ByRef<BeatmapKey>,
                     BeatmapLevel*, 
                     OverrideEnvironmentSettings*, 
                     ColorScheme*, 
@@ -277,11 +276,7 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel, // hook name
     BeatmapLevel *level = self->____standardLevelScenesTransitionSetupData->get_beatmapLevel();
     BeatmapDifficulty difficulty = beatmapKey->difficulty;
 
-    if (!level)
-    {
-        logger.info("Level not found");
-        return;
-    }
+    if (!level) return;
 
     skipNextActivation = true;
 
@@ -298,6 +293,74 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel, // hook name
     CreateRequest(jsonStr);
 }
 
+MAKE_HOOK_MATCH(MenuTransitionsHelper_StartMultiplayerLevel, static_cast<
+                    void (MenuTransitionsHelper::*)
+                    (
+                        ::StringW,
+                        ByRef<BeatmapKey>,
+                        BeatmapLevel*,
+                        IBeatmapLevelData*,
+                        ColorScheme*,
+                        GameplayModifiers*,
+                        PlayerSpecificSettings*,
+                        PracticeSettings*,
+                        ::StringW,
+                        bool,
+                        ::System::Action*,
+                        ::System::Action_1<::Zenject::DiContainer*>*,
+                        ::System::Action_2<::UnityW<MultiplayerLevelScenesTransitionSetupDataSO>, MultiplayerResultsData*>*,
+                        ::System::Action_1<DisconnectedReason>*
+                    )
+                >(&MenuTransitionsHelper::StartMultiplayerLevel), void,
+                MenuTransitionsHelper *self,
+                ::StringW gameMode,
+                ByRef<BeatmapKey> beatmapKey,
+                BeatmapLevel* beatmapLevel,
+                IBeatmapLevelData* beatmapLevelData,
+                ColorScheme* overrideColorScheme,
+                GameplayModifiers* gameplayModifiers,
+                PlayerSpecificSettings* playerSpecificSettings,
+                PracticeSettings* practiceSettings,
+                ::StringW backButtonText,
+                bool useTestNoteCutSoundEffects,
+                ::System::Action* beforeSceneSwitchCallback,
+                ::System::Action_1<::Zenject::DiContainer*>* afterSceneSwitchCallback,
+                ::System::Action_2<::UnityW<MultiplayerLevelScenesTransitionSetupDataSO>, MultiplayerResultsData*>* levelFinishedCallback,
+                ::System::Action_1<DisconnectedReason>* didDisconnectCallback)
+{   
+    MenuTransitionsHelper_StartMultiplayerLevel(
+        self,
+        gameMode,
+        beatmapKey,
+        beatmapLevel,
+        beatmapLevelData,
+        overrideColorScheme,
+        gameplayModifiers,
+        playerSpecificSettings,
+        practiceSettings,
+        backButtonText,
+        useTestNoteCutSoundEffects,
+        beforeSceneSwitchCallback,
+        afterSceneSwitchCallback,
+        levelFinishedCallback,
+        didDisconnectCallback);
+    
+    
+    auto level = self->____multiplayerLevelScenesTransitionSetupData->get_beatmapLevel();
+    BeatmapDifficulty difficulty = beatmapKey->difficulty;
+
+    nlohmann::json data;
+    data["type"] = "MultiplayerBeatmapInitialized";
+    data["title"] = level->songName;
+    data["author"] = level->songAuthorName;
+    data["duration"] = level->songDuration;
+    data["mappers"] = level->allMappers;
+    data["difficulty"] = difficultyToString(difficulty);
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
 
 MAKE_HOOK_MATCH(PauseController_Pause, &PauseController::Pause, void, PauseController *self) {
     PauseController_Pause(self);
