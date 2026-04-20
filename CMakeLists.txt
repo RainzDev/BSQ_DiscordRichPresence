@@ -14,7 +14,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 # Set compiler options
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-add_compile_options(-frtti -fexceptions -O3)
+add_link_options(-Wl,--exclude-libs,ALL)
+add_compile_options(-frtti -fexceptions -O3 -fvisibility=hidden)
 
 # Expose definitions from qpm_defines.cmake
 add_compile_definitions(VERSION=\"${MOD_VERSION}\")
