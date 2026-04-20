@@ -2,6 +2,8 @@
 
 A Beat Saber Quest mod for displaying status on Discord
 
+![Alt Text](cover.jpg)
+
 ## 📋 Requirements
 
 - ✅ Modded Beat Saber Quest (MBF / QuestPatcher)

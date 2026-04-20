@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "UnityEngine/Resources.hpp"
+#include "UnityEngine/Application.hpp"
 #include "GlobalNamespace/MultiplayerSessionManager.hpp"
 
 
@@ -99,6 +100,10 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
 
     auto portInput = BSML::Lite::CreateStringSetting(portLayout, "Port", getConfig().PortSetting.GetValue(), {}, {}, [](StringW val) {
         getConfig().PortSetting.SetValue(val);
+    });
+
+    BSML::Lite::CreateUIButton(container, "Open Instructions", []() {
+        UnityEngine::Application::OpenURL("https://github.com/RainzDev/BSQ_DiscordRichPresence#-quick-start");
     });
 }
 
