@@ -45,6 +45,7 @@
 #include "GlobalNamespace/GameServerLobbyFlowCoordinator.hpp"
 #include "GlobalNamespace/PracticeSettings.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
+#include "GlobalNamespace/MainMenuViewController.hpp"
 #include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
 #include "GlobalNamespace/LevelCollectionViewController.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
@@ -180,6 +181,32 @@ MAKE_HOOK_MATCH(LevelCollectionViewController_DidActivate, &GlobalNamespace::Lev
 
     CreateRequest(jsonStr);
     
+}
+
+MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::DidActivate, void, MainMenuViewController* self, bool firstActivation, bool addedToHierachy, bool screenSystemEnabling) {
+    MainMenuViewController_DidActivate(self, firstActivation, addedToHierachy, screenSystemEnabling);
+
+    if (firstActivation && getConfig().FirstTime.GetValue()) {
+        auto modal = BSML::Lite::CreateModal(self->transform, {100, 60}, []() {});
+
+        auto verticalLayout = BSML::Lite::CreateVerticalLayoutGroup(modal);
+    
+        auto text = BSML::Lite::CreateText(verticalLayout, "Thank you for installing the mod! To setup your Discord RPC, please\nlook through the instructions by pressing \"Open Instructions\". ");
+        text->set_enableWordWrapping(true);
+        text->set_alignment(TMPro::TextAlignmentOptions::Center);
+
+        auto horizontalLayout = BSML::Lite::CreateHorizontalLayoutGroup(verticalLayout);
+
+        BSML::Lite::CreateUIButton(horizontalLayout, "Open Instructions", []() {
+            UnityEngine::Application::OpenURL("https://github.com/RainzDev/BSQ_DiscordRichPresence#-quick-start");
+        });
+        BSML::Lite::CreateUIButton(horizontalLayout, "Close", [modal]() {
+            getConfig().FirstTime.SetValue(false);
+            modal->Hide();
+        });
+
+        modal->Show();
+    }
 }
 
 MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate,
@@ -444,6 +471,7 @@ extern "C" EXPORT void setup(CModInfo* info) noexcept {
 extern "C" EXPORT void late_load() noexcept {
     il2cpp_functions::Init();
     logger.info("Installing hooks");
+    INSTALL_HOOK(logger, MainMenuViewController_DidActivate);
     INSTALL_HOOK(logger, PauseMenuManager_MenuButtonPressed);
     INSTALL_HOOK(logger, LevelCollectionViewController_DidActivate);
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerConnected);

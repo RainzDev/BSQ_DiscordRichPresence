@@ -62,6 +62,12 @@ chmod +x bridgeapi-linux
 3. Enter your PC's [private IP](https://github.com/RainzDev/BSQ_DiscordRichPresence?tab=readme-ov-file#finding-your-private-ip) and port (Leave port as it is unless you know what you're doing)
 4. Press "Ok"
 
+Please note that if the Quest doesn't manage to connect to your server, look over these:
+
+- Both Quest and PC should not be connected to a VPN
+- Both must be using the same network
+- Firewall must not be blocking
+
 ### 5. Verify Connection
 
 Check your server console — you should see events appearing as you play!
