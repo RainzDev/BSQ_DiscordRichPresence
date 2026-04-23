@@ -3,6 +3,9 @@ name: Publish
 env:
   module_id: discordrichpresence
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
