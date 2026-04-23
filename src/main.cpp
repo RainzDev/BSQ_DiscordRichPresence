@@ -72,6 +72,13 @@ static bool skipNextActivation = false;
 // Store the mod ID and version, so it can be sent to the modloader at startup
 static modloader::ModInfo modInfo{MOD_ID, VERSION, 0};
 
+
+std::atomic<bool> running = true;
+std::atomic<bool> heartbeat = true;
+
+std::thread heartbeatThread;
+
+
 std::string difficultyToString(BeatmapDifficulty difficulty)
 {
     switch (difficulty)
@@ -135,6 +142,7 @@ void CreateRequest(std::string jsonStr) {
     }).detach();
 }
 
+
 MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerConnected, &MultiplayerSessionManager::HandlePlayerConnected, void, GlobalNamespace::MultiplayerSessionManager* self, GlobalNamespace::IConnectedPlayer* player) {
     MultiplayerSessionManager_HandlePlayerConnected(self, player);
 
@@ -142,7 +150,7 @@ MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerConnected, &MultiplayerSes
 
     nlohmann::json data;
     data["type"] = "LobbyPlayerOnConnect";
-    data["playerCount"] = getCount;
+    data["playerCount"] = getCount + 1; // Add 1 to the count because beat saber does not include the local player
 
     std::string jsonStr = data.dump();
 
