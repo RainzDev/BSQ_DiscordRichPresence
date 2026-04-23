@@ -1,5 +1,5 @@
 {
-  "_QPVersion": "0.1.3",
+  "_QPVersion": "0.1.2",
   "name": "${mod_name}",
   "id": "${mod_id}",
   "version": "${version}",
@@ -9,7 +9,7 @@
   "description": "A Beat Saber Quest mod for displaying stats on Discord",
   "dependencies": [
     {
-      "version": "1.0.4*",
+      "version": "*",
       "id": "morebuttons",
       "downloadIfMissing": "https://github.com/Metalit/MoreButtons/releases/download/v1.0.4/MoreButtons.qmod"
     }
