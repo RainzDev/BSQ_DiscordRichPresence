@@ -52,6 +52,8 @@
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/MultiplayerLocalActivePlayerGameplayManager.hpp"
 #include "GlobalNamespace/StandardLevelGameplayManager.hpp"
+#include "GlobalNamespace/SongStartHandler.hpp"
+#include "GlobalNamespace/MultiplayerResultsViewController.hpp"
 #include "GlobalNamespace/TutorialSongController.hpp"
 #include "GlobalNamespace/MissionLevelScenesTransitionSetupDataSO.hpp"
 #include "GlobalNamespace/MissionLevelGameplayManager.hpp"
@@ -68,15 +70,12 @@
 using namespace GlobalNamespace;
 
 static bool skipNextActivation = false;
+static bool inGameplay = false;
+static ::GlobalNamespace::BeatmapLevel* getBeatmapLevel;
+static BeatmapDifficulty getDifficulty;
 
 // Store the mod ID and version, so it can be sent to the modloader at startup
 static modloader::ModInfo modInfo{MOD_ID, VERSION, 0};
-
-
-std::atomic<bool> running = true;
-std::atomic<bool> heartbeat = true;
-
-std::thread heartbeatThread;
 
 
 std::string difficultyToString(BeatmapDifficulty difficulty)
@@ -148,13 +147,15 @@ MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerConnected, &MultiplayerSes
 
     auto getCount = self->get_connectedPlayerCount();
 
-    nlohmann::json data;
-    data["type"] = "LobbyPlayerOnConnect";
-    data["playerCount"] = getCount + 1; // Add 1 to the count because beat saber does not include the local player
+    if (!inGameplay) {
+        nlohmann::json data;
+        data["type"] = "LobbyPlayerOnConnect";
+        data["playerCount"] = getCount + 1; // Add 1 to the count because beat saber does not include the local player
 
-    std::string jsonStr = data.dump();
+        std::string jsonStr = data.dump();
 
-    CreateRequest(jsonStr);
+        CreateRequest(jsonStr);
+    }
 }
 
 MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerDisconnected, &MultiplayerSessionManager::HandlePlayerDisconnected, void, GlobalNamespace::MultiplayerSessionManager* self, GlobalNamespace::IConnectedPlayer* player) {
@@ -162,13 +163,15 @@ MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerDisconnected, &Multiplayer
 
     auto getCount = self->get_connectedPlayerCount();
 
-    nlohmann::json data;
-    data["type"] = "LobbyPlayerOnConnect";
-    data["playerCount"] = getCount;
+    if (!inGameplay) {
+        nlohmann::json data;
+        data["type"] = "LobbyPlayerOnDisonnect";
+        data["playerCount"] = getCount + 1; // Add 1 to the count because beat saber does not include the local player
 
-    std::string jsonStr = data.dump();
+        std::string jsonStr = data.dump();
 
-    CreateRequest(jsonStr);
+        CreateRequest(jsonStr);
+    }
 }
 
 MAKE_HOOK_MATCH(LevelCollectionViewController_DidActivate, &GlobalNamespace::LevelCollectionViewController::DidActivate, void, GlobalNamespace::LevelCollectionViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
@@ -325,6 +328,35 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
     CreateRequest(jsonStr);
 }
 
+
+MAKE_HOOK_MATCH(SongStartHandler_StartSong, &SongStartHandler::StartSong, void, SongStartHandler *self) {
+    auto sessionManager = self->_multiplayerSessionManager;
+
+    inGameplay = true;
+
+    nlohmann::json data;
+    data["title"] = getBeatmapLevel->songName;
+    data["author"] = getBeatmapLevel->songAuthorName;
+    data["duration"] = getBeatmapLevel->songDuration;
+    data["mappers"] = getBeatmapLevel->allMappers;
+    data["difficulty"] = difficultyToString(getDifficulty);
+
+    if (sessionManager->get_isSpectating()) {
+        data["type"] = "SpectateInitialized";
+
+        std::string jsonStr = data.dump();
+
+        CreateRequest(jsonStr);
+        return;
+    }
+
+    data["type"] = "MultiplayerBeatmapInitialized";
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
 MAKE_HOOK_MATCH(MenuTransitionsHelper_StartMultiplayerLevel, static_cast<
                     void (MenuTransitionsHelper::*)
                     (
@@ -377,21 +409,8 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartMultiplayerLevel, static_cast<
         levelFinishedCallback,
         didDisconnectCallback);
     
-    
-    auto level = self->____multiplayerLevelScenesTransitionSetupData->get_beatmapLevel();
-    BeatmapDifficulty difficulty = beatmapKey->difficulty;
-
-    nlohmann::json data;
-    data["type"] = "MultiplayerBeatmapInitialized";
-    data["title"] = level->songName;
-    data["author"] = level->songAuthorName;
-    data["duration"] = level->songDuration;
-    data["mappers"] = level->allMappers;
-    data["difficulty"] = difficultyToString(difficulty);
-
-    std::string jsonStr = data.dump();
-
-    CreateRequest(jsonStr);
+    ::GlobalNamespace::BeatmapLevel* getBeatmapLevel = self->____multiplayerLevelScenesTransitionSetupData->get_beatmapLevel();
+    ::GlobalNamespace::BeatmapDifficulty getDifficulty = beatmapKey->difficulty;
 }
 
 MAKE_HOOK_MATCH(PauseController_Pause, &PauseController::Pause, void, PauseController *self) {
@@ -429,6 +448,19 @@ MAKE_HOOK_MATCH(StandardLevelGameplayManager_HandleGameEnergyDidReach0, &Standar
 
     nlohmann::json data;
     data["type"] = "BeatmapFailed";
+
+    std::string jsonStr = data.dump();
+
+    CreateRequest(jsonStr);
+}
+
+MAKE_HOOK_MATCH(MultiplayerResultsViewController_DidActivate, &MultiplayerResultsViewController::DidActivate, void, MultiplayerResultsViewController *self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    MultiplayerResultsViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+
+    inGameplay = false;
+
+    nlohmann::json data;
+    data["type"] = "MultiplayerBeatmapFinished";
 
     std::string jsonStr = data.dump();
 
@@ -479,10 +511,12 @@ extern "C" EXPORT void setup(CModInfo* info) noexcept {
 extern "C" EXPORT void late_load() noexcept {
     il2cpp_functions::Init();
     logger.info("Installing hooks");
+    INSTALL_HOOK(logger, SongStartHandler_StartSong);
     INSTALL_HOOK(logger, MainMenuViewController_DidActivate);
     INSTALL_HOOK(logger, PauseMenuManager_MenuButtonPressed);
     INSTALL_HOOK(logger, LevelCollectionViewController_DidActivate);
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerConnected);
+    INSTALL_HOOK(logger, MultiplayerResultsViewController_DidActivate);
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerDisconnected);
     INSTALL_HOOK(logger, MenuTransitionsHelper_StartStandardLevel);
     INSTALL_HOOK(logger, MenuTransitionsHelper_StartMultiplayerLevel);
