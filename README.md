@@ -70,7 +70,7 @@ Please note that if the Quest doesn't manage to connect to your server, look ove
 
 ### 5. Verify Connection
 
-Check your server console — you should see events appearing as you play!
+Check your server console and you should see events showing up while you're doing something on Beat Saber.
 
 ## Finding Your Private IP
 
