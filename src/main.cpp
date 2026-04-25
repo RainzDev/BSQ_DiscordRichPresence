@@ -2,6 +2,7 @@
 #include "main.hpp"
 #include "nlohmann/json.hpp"
 #include "config.hpp"
+#include "UI/ui.hpp"
 
 #include "config.h"
 
@@ -67,47 +68,32 @@
 #include "GlobalNamespace/LobbyPlayersDataModel.hpp"
 #include "System/Collections/Generic/IReadOnlyDictionary_2.hpp"
 
+#include "GlobalNamespace/MainMenuViewController.hpp"
+
 using namespace GlobalNamespace;
 
-static bool skipNextActivation = false;
-static bool inGameplay = false;
-static ::GlobalNamespace::BeatmapLevel* getBeatmapLevel;
-static BeatmapDifficulty getDifficulty;
+bool skipNextActivation = false;
+bool inGameplay = false;
+::GlobalNamespace::BeatmapLevel* getBeatmapLevel;
+BeatmapDifficulty getDifficulty;
 
-// Store the mod ID and version, so it can be sent to the modloader at startup
-static modloader::ModInfo modInfo{MOD_ID, VERSION, 0};
-
-
-std::string difficultyToString(BeatmapDifficulty difficulty)
+std::string difficultyToString(GlobalNamespace::BeatmapDifficulty difficulty)
 {
     switch (difficulty)
     {
-    case BeatmapDifficulty::Easy:
+    case GlobalNamespace::BeatmapDifficulty::Easy:
         return "Easy";
-    case BeatmapDifficulty::Normal:
+    case GlobalNamespace::BeatmapDifficulty::Normal:
         return "Normal";
-    case BeatmapDifficulty::Hard:
+    case GlobalNamespace::BeatmapDifficulty::Hard:
         return "Hard";
-    case BeatmapDifficulty::Expert:
+    case GlobalNamespace::BeatmapDifficulty::Expert:
         return "Expert";
-    case BeatmapDifficulty::ExpertPlus:
+    case GlobalNamespace::BeatmapDifficulty::ExpertPlus:
         return "Expert+";
+    default:
+        return "Unknown";
     }
-    return "Unknown";
-}
-
-void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
-    if (!firstActivation)
-        return;
-
-    auto container = BSML::Lite::CreateScrollableSettingsContainer(self);
-
-    AddConfigValueInputString(container, getConfig().PCIPSetting);
-    AddConfigValueInputString(container, getConfig().PortSetting);
-
-    BSML::Lite::CreateUIButton(container, "Open Instructions", []() {
-        UnityEngine::Application::OpenURL("https://github.com/RainzDev/BSQ_DiscordRichPresence#-quick-start");
-    });
 }
 
 void CreateRequest(std::string jsonStr) {
@@ -146,7 +132,6 @@ void CreateRequest(std::string jsonStr) {
     }).detach();
 }
 
-
 MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerConnected, &MultiplayerSessionManager::HandlePlayerConnected, void, GlobalNamespace::MultiplayerSessionManager* self, GlobalNamespace::IConnectedPlayer* player) {
     MultiplayerSessionManager_HandlePlayerConnected(self, player);
 
@@ -155,10 +140,9 @@ MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerConnected, &MultiplayerSes
     if (!inGameplay) {
         nlohmann::json data;
         data["type"] = "LobbyPlayerOnConnect";
-        data["playerCount"] = getCount + 1; // Add 1 to the count because beat saber does not include the local player
+        data["playerCount"] = getCount + 1;
 
         std::string jsonStr = data.dump();
-
         CreateRequest(jsonStr);
     }
 }
@@ -171,10 +155,9 @@ MAKE_HOOK_MATCH(MultiplayerSessionManager_HandlePlayerDisconnected, &Multiplayer
     if (!inGameplay) {
         nlohmann::json data;
         data["type"] = "LobbyPlayerOnDisonnect";
-        data["playerCount"] = getCount + 1; // Add 1 to the count because beat saber does not include the local player
+        data["playerCount"] = getCount + 1;
 
         std::string jsonStr = data.dump();
-
         CreateRequest(jsonStr);
     }
 }
@@ -187,108 +170,70 @@ MAKE_HOOK_MATCH(LevelCollectionViewController_DidActivate, &GlobalNamespace::Lev
         return;
     }
 
-    // Optional: only fire when actually visible
     if (!screenSystemEnabling) return;
-    
+
     nlohmann::json data;
     data["type"] = "LevelSelectionMenuInitialized";
 
     std::string jsonStr = data.dump();
-
     CreateRequest(jsonStr);
-    
 }
 
-MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::DidActivate, void, MainMenuViewController* self, bool firstActivation, bool addedToHierachy, bool screenSystemEnabling) {
-    MainMenuViewController_DidActivate(self, firstActivation, addedToHierachy, screenSystemEnabling);
-
-    if (firstActivation && getConfig().FirstTime.GetValue()) {
-        auto modal = BSML::Lite::CreateModal(self->transform, {100, 60}, []() {});
-
-        auto verticalLayout = BSML::Lite::CreateVerticalLayoutGroup(modal);
-    
-        auto text = BSML::Lite::CreateText(verticalLayout, "Thank you for installing the mod! To setup your Discord RPC, please\nlook through the instructions by pressing \"Open Instructions\". ");
-        text->set_enableWordWrapping(true);
-        text->set_alignment(TMPro::TextAlignmentOptions::Center);
-
-        auto horizontalLayout = BSML::Lite::CreateHorizontalLayoutGroup(verticalLayout);
-
-        BSML::Lite::CreateUIButton(horizontalLayout, "Open Instructions", []() {
-            UnityEngine::Application::OpenURL("https://github.com/RainzDev/BSQ_DiscordRichPresence#-quick-start");
-        });
-        BSML::Lite::CreateUIButton(horizontalLayout, "Close", [modal]() {
-            getConfig().FirstTime.SetValue(false);
-            modal->Hide();
-        });
-
-        modal->Show();
-    }
-}
-
-MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate,
-    &GlobalNamespace::MainFlowCoordinator::DidActivate,
-    void,
-    GlobalNamespace::MainFlowCoordinator* self,
-    bool firstActivation,
-    bool addedToHierarchy,
-    bool screenSystemEnabling) {
-
+MAKE_HOOK_MATCH(MainFlowCoordinator_DidActivate, &GlobalNamespace::MainFlowCoordinator::DidActivate, void, GlobalNamespace::MainFlowCoordinator* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     MainFlowCoordinator_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
     nlohmann::json data;
     data["type"] = "MainMenuInitialized";
 
     std::string jsonStr = data.dump();
-
     CreateRequest(jsonStr);
 }
 
 MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
                 static_cast<void (MenuTransitionsHelper::*)(
-                    ::StringW, 
+                    ::StringW,
                     ByRef<BeatmapKey>,
-                    BeatmapLevel*, 
-                    OverrideEnvironmentSettings*, 
-                    ColorScheme*, 
+                    BeatmapLevel*,
+                    OverrideEnvironmentSettings*,
+                    ColorScheme*,
                     bool,
-                    ColorScheme*, 
-                    GameplayModifiers*, 
-                    PlayerSpecificSettings*, 
-                    PracticeSettings*, 
-                    EnvironmentsListModel*, 
-                    ::StringW, 
-                    bool, 
-                    bool, 
-                    System::Action*, 
-                    System::Action_1<::Zenject::DiContainer*>*, 
-                    System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>, 
-                                     LevelCompletionResults*>*, 
-                    System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>, 
-                                     LevelCompletionResults*>*, 
+                    ColorScheme*,
+                    GameplayModifiers*,
+                    PlayerSpecificSettings*,
+                    PracticeSettings*,
+                    EnvironmentsListModel*,
+                    ::StringW,
+                    bool,
+                    bool,
+                    System::Action*,
+                    System::Action_1<::Zenject::DiContainer*>*,
+                    System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>,
+                                     LevelCompletionResults*>*,
+                    System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>,
+                                     LevelCompletionResults*>*,
                     System::Nullable_1<RecordingToolManager_SetupData>
-                )>(&MenuTransitionsHelper::StartStandardLevel),//func signature
-                void,//func return
+                )>(&MenuTransitionsHelper::StartStandardLevel),
+                void,
                 MenuTransitionsHelper *self,
-                ::StringW gameMode, 
+                ::StringW gameMode,
                 ByRef<BeatmapKey> beatmapKey,
-                BeatmapLevel* beatmapLevel,  
+                BeatmapLevel* beatmapLevel,
                 OverrideEnvironmentSettings* overrideEnvironmentSettings,
-                ColorScheme* overrideColorScheme, 
+                ColorScheme* overrideColorScheme,
                 bool playerOverrideLightshowColors,
                 ColorScheme* beatmapOverrideColorScheme,
-                GameplayModifiers* gameplayModifiers, 
+                GameplayModifiers* gameplayModifiers,
                 PlayerSpecificSettings* playerSpecificSettings,
-                PracticeSettings* practiceSettings, 
-                EnvironmentsListModel* environmentsListModel, 
+                PracticeSettings* practiceSettings,
+                EnvironmentsListModel* environmentsListModel,
                 ::StringW backButtonText,
-                bool useTestNoteCutSoundEffects, 
-                bool startPaused, 
-                ::System::Action* beforeSceneSwitchToGameplayCallback, 
+                bool useTestNoteCutSoundEffects,
+                bool startPaused,
+                ::System::Action* beforeSceneSwitchToGameplayCallback,
                 ::System::Action_1<::Zenject::DiContainer*>* afterSceneSwitchToGameplayCallback,
                 ::System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>, LevelCompletionResults*>* levelFinishedCallback,
                 ::System::Action_2<::UnityW<StandardLevelScenesTransitionSetupDataSO>, LevelCompletionResults*>* levelRestartedCallback,
-                ::System::Nullable_1<RecordingToolManager_SetupData> recordingToolData
-)
+                ::System::Nullable_1<RecordingToolManager_SetupData> recordingToolData)
 {
     MenuTransitionsHelper_StartStandardLevel(
         self,
@@ -318,6 +263,8 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
 
     if (!level) return;
 
+    getBeatmapLevel = level;
+    getDifficulty = difficulty;
     skipNextActivation = true;
 
     nlohmann::json data;
@@ -329,10 +276,8 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
     data["difficulty"] = difficultyToString(difficulty);
 
     std::string jsonStr = data.dump();
-
     CreateRequest(jsonStr);
 }
-
 
 MAKE_HOOK_MATCH(SongStartHandler_StartSong, &SongStartHandler::StartSong, void, SongStartHandler *self) {
     auto sessionManager = self->_multiplayerSessionManager;
@@ -348,17 +293,11 @@ MAKE_HOOK_MATCH(SongStartHandler_StartSong, &SongStartHandler::StartSong, void, 
 
     if (sessionManager->get_isSpectating()) {
         data["type"] = "SpectateInitialized";
-
-        std::string jsonStr = data.dump();
-
-        CreateRequest(jsonStr);
-        return;
+    } else {
+        data["type"] = "MultiplayerBeatmapInitialized";
     }
 
-    data["type"] = "MultiplayerBeatmapInitialized";
-
     std::string jsonStr = data.dump();
-
     CreateRequest(jsonStr);
 }
 
@@ -396,7 +335,7 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartMultiplayerLevel, static_cast<
                 ::System::Action_1<::Zenject::DiContainer*>* afterSceneSwitchCallback,
                 ::System::Action_2<::UnityW<MultiplayerLevelScenesTransitionSetupDataSO>, MultiplayerResultsData*>* levelFinishedCallback,
                 ::System::Action_1<DisconnectedReason>* didDisconnectCallback)
-{   
+{
     MenuTransitionsHelper_StartMultiplayerLevel(
         self,
         gameMode,
@@ -413,9 +352,9 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartMultiplayerLevel, static_cast<
         afterSceneSwitchCallback,
         levelFinishedCallback,
         didDisconnectCallback);
-    
-    ::GlobalNamespace::BeatmapLevel* getBeatmapLevel = self->____multiplayerLevelScenesTransitionSetupData->get_beatmapLevel();
-    ::GlobalNamespace::BeatmapDifficulty getDifficulty = beatmapKey->difficulty;
+
+    getBeatmapLevel = beatmapLevel;
+    getDifficulty = beatmapKey->difficulty;
 }
 
 MAKE_HOOK_MATCH(PauseController_Pause, &PauseController::Pause, void, PauseController *self) {
@@ -425,7 +364,6 @@ MAKE_HOOK_MATCH(PauseController_Pause, &PauseController::Pause, void, PauseContr
     data["type"] = "BeatmapPaused";
 
     std::string jsonStr = data.dump();
-
     CreateRequest(jsonStr);
 }
 
@@ -436,15 +374,11 @@ MAKE_HOOK_MATCH(PauseController_HandlePauseMenuManagerDidPressContinueButton, &P
     data["type"] = "BeatmapResumed";
 
     std::string jsonStr = data.dump();
-
     CreateRequest(jsonStr);
 }
 
 MAKE_HOOK_MATCH(PauseMenuManager_MenuButtonPressed, &PauseMenuManager::MenuButtonPressed, void, PauseMenuManager *self) {
-
     PauseMenuManager_MenuButtonPressed(self);
-
-    // Prevent incorrect skip later
     skipNextActivation = false;
 }
 
@@ -455,7 +389,6 @@ MAKE_HOOK_MATCH(StandardLevelGameplayManager_HandleGameEnergyDidReach0, &Standar
     data["type"] = "BeatmapFailed";
 
     std::string jsonStr = data.dump();
-
     CreateRequest(jsonStr);
 }
 
@@ -468,7 +401,6 @@ MAKE_HOOK_MATCH(MultiplayerResultsViewController_DidActivate, &MultiplayerResult
     data["type"] = "MultiplayerBeatmapFinished";
 
     std::string jsonStr = data.dump();
-
     CreateRequest(jsonStr);
 }
 
@@ -482,17 +414,19 @@ MAKE_HOOK_MATCH(ResultsViewController_DidActivate, &ResultsViewController::DidAc
     if (results && results->levelEndStateType == LevelCompletionResults::LevelEndStateType::Cleared) {
         nlohmann::json data;
         data["type"] = "BeatmapCleared";
-        data["title"] = level->___songName;
+        data["title"] = level->songName;
         data["author"] = level->songAuthorName;
         data["duration"] = level->songDuration;
         data["mappers"] = level->allMappers;
         data["difficulty"] = difficultyToString(difficulty);
 
         std::string jsonStr = data.dump();
-
         CreateRequest(jsonStr);
     }
 }
+
+// Store the mod ID and version, so it can be sent to the modloader at startup
+static modloader::ModInfo modInfo{MOD_ID, VERSION, 0};
 
 // Called in the early stages of game loading
 // (see https://github.com/sc2ad/scotland2?tab=readme-ov-file#installationusage)
@@ -516,8 +450,8 @@ extern "C" EXPORT void setup(CModInfo* info) noexcept {
 extern "C" EXPORT void late_load() noexcept {
     il2cpp_functions::Init();
     logger.info("Installing hooks");
+    InstallUIHooks();
     INSTALL_HOOK(logger, SongStartHandler_StartSong);
-    INSTALL_HOOK(logger, MainMenuViewController_DidActivate);
     INSTALL_HOOK(logger, PauseMenuManager_MenuButtonPressed);
     INSTALL_HOOK(logger, LevelCollectionViewController_DidActivate);
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerConnected);
