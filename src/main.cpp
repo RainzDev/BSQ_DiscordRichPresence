@@ -112,12 +112,12 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
 
 void CreateRequest(std::string jsonStr) {
     std::thread([jsonStr] {
-        std::string getIp = getConfig().PCIPSetting.GetValue();
-        std::string getPort = getConfig().PortSetting.GetValue();
+        const std::string getIp = getConfig().PCIPSetting.GetValue();
+        const std::string getPort = getConfig().PortSetting.GetValue();
 
-        std::string URL = "http://" + getIp + ":" + getPort + "/sendData";
+        const std::string URL = "http://" + getIp + ":" + getPort + "/sendData";
 
-        auto path = WebUtils::URLOptions{ URL };
+        WebUtils::URLOptions path{ URL };
         path.noEscape = true;
         
         std::span<const uint8_t> body(
@@ -131,7 +131,12 @@ void CreateRequest(std::string jsonStr) {
 
         auto responseValue = response.get();
 
-        logger.info("Attempted to send post request to {} with result of status code {}, and curl status being {}", path.fullURl(), std::to_string(responseValue.get_HttpCode()), std::to_string(responseValue.get_CurlStatus()));
+        logger.info(
+            "Attempted to send post request to {} with result of status code {}, and curl status being {}",
+            path.fullURl(), 
+            std::to_string(responseValue.get_HttpCode()), 
+            std::to_string(responseValue.get_CurlStatus())
+        );
 
         bool success = responseValue.IsSuccessful();
         if (!success) {
