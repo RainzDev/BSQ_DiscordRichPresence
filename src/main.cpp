@@ -36,32 +36,24 @@
 
 
 #include "GlobalNamespace/PauseMenuManager.hpp"
-#include "GlobalNamespace/LevelSelectionNavigationController.hpp"
-#include "GlobalNamespace/ResultsViewController.hpp"
 #include "GlobalNamespace/LevelCompletionResults.hpp"
 #include "GlobalNamespace/IConnectedPlayer.hpp"
 #include "GlobalNamespace/MultiplayerPlayersManager.hpp"
 #include "GlobalNamespace/MultiplayerSessionManager.hpp"
 #include "GlobalNamespace/MultiplayerLevelScenesTransitionSetupDataSO.hpp"
-#include "GlobalNamespace/GameServerLobbyFlowCoordinator.hpp"
 #include "GlobalNamespace/PracticeSettings.hpp"
 #include "GlobalNamespace/StandardLevelDetailView.hpp"
-#include "GlobalNamespace/MainMenuViewController.hpp"
 #include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
-#include "GlobalNamespace/LevelCollectionViewController.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/MultiplayerLocalActivePlayerGameplayManager.hpp"
 #include "GlobalNamespace/MultiplayerLocalActivePlayerGameplayAnimator.hpp"
 #include "GlobalNamespace/StandardLevelGameplayManager.hpp"
-#include "GlobalNamespace/SongStartHandler.hpp"
-#include "GlobalNamespace/MultiplayerResultsViewController.hpp"
 #include "GlobalNamespace/TutorialSongController.hpp"
 #include "GlobalNamespace/MissionLevelScenesTransitionSetupDataSO.hpp"
 #include "GlobalNamespace/MissionLevelGameplayManager.hpp"
 #include "GlobalNamespace/PauseController.hpp"
 #include "GlobalNamespace/MenuDestination.hpp"
-#include "GlobalNamespace/AudioTimeSyncController.hpp"
 #include "GlobalNamespace/MenuTransitionsHelper.hpp"
 #include "GlobalNamespace/BeatmapDifficulty.hpp"
 #include "GlobalNamespace/ILobbyPlayersDataModel.hpp"
@@ -69,6 +61,13 @@
 #include "GlobalNamespace/LobbyPlayersDataModel.hpp"
 #include "System/Collections/Generic/IReadOnlyDictionary_2.hpp"
 
+#include "GlobalNamespace/MainMenuViewController.hpp"
+#include "GlobalNamespace/SongStartSyncController.hpp"
+#include "GlobalNamespace/MultiplayerResultsViewController.hpp"
+#include "GlobalNamespace/GameServerLobbyFlowCoordinator.hpp"
+#include "GlobalNamespace/LevelCollectionViewController.hpp"
+#include "GlobalNamespace/LevelSelectionNavigationController.hpp"
+#include "GlobalNamespace/ResultsViewController.hpp"
 #include "GlobalNamespace/MainMenuViewController.hpp"
 
 using namespace GlobalNamespace;
@@ -280,11 +279,11 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
     CreateRequest(jsonStr);
 }
 
-MAKE_HOOK_MATCH(SongStartHandler_StartSong, &SongStartHandler::StartSong, void, SongStartHandler *self) {
-    SongStartHandler_StartSong(self);
+MAKE_HOOK_MATCH(SongStartSyncController_StartSong, &SongStartSyncController::StartSong, void, SongStartSyncController *self, PlayersSpecificSettingsAtGameStartModel* playersSpecificSettingsAtGameStartModel, ::StringW sessionGameId) {
+    SongStartSyncController_StartSong(self, playersSpecificSettingsAtGameStartModel, sessionGameId);
     auto sessionManager = self->_multiplayerSessionManager;
 
-    logger.debug("SongStartHandler_StartSong called, session manager is null: {}", sessionManager == nullptr);
+    logger.debug("SongStartSyncController_StartSong called, session manager is null: {}", sessionManager == nullptr);
 
     inGameplay = true;
 
@@ -470,7 +469,7 @@ extern "C" EXPORT void late_load() noexcept {
     il2cpp_functions::Init();
     logger.info("Installing hooks");
     InstallUIHooks();
-    INSTALL_HOOK(logger, SongStartHandler_StartSong);
+    INSTALL_HOOK(logger, SongStartSyncController_StartSong);
     INSTALL_HOOK(logger, PauseMenuManager_MenuButtonPressed);
     INSTALL_HOOK(logger, LevelCollectionViewController_DidActivate);
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerConnected);
