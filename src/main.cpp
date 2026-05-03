@@ -52,6 +52,7 @@
 #include "GlobalNamespace/BeatmapLevel.hpp"
 #include "GlobalNamespace/IReadonlyBeatmapData.hpp"
 #include "GlobalNamespace/MultiplayerLocalActivePlayerGameplayManager.hpp"
+#include "GlobalNamespace/MultiplayerLocalActivePlayerGameplayAnimator.hpp"
 #include "GlobalNamespace/StandardLevelGameplayManager.hpp"
 #include "GlobalNamespace/SongStartHandler.hpp"
 #include "GlobalNamespace/MultiplayerResultsViewController.hpp"
@@ -280,7 +281,10 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
 }
 
 MAKE_HOOK_MATCH(SongStartHandler_StartSong, &SongStartHandler::StartSong, void, SongStartHandler *self) {
+    SongStartHandler_StartSong(self);
     auto sessionManager = self->_multiplayerSessionManager;
+
+    logger.debug("SongStartHandler_StartSong called, session manager is null: {}", sessionManager == nullptr);
 
     inGameplay = true;
 
@@ -291,7 +295,7 @@ MAKE_HOOK_MATCH(SongStartHandler_StartSong, &SongStartHandler::StartSong, void, 
     data["mappers"] = getBeatmapLevel->allMappers;
     data["difficulty"] = difficultyToString(getDifficulty);
 
-    if (sessionManager->get_isSpectating()) {
+    if (sessionManager->isSpectating) {
         data["type"] = "SpectateInitialized";
     } else {
         data["type"] = "MultiplayerBeatmapInitialized";
@@ -392,6 +396,21 @@ MAKE_HOOK_MATCH(StandardLevelGameplayManager_HandleGameEnergyDidReach0, &Standar
     CreateRequest(jsonStr);
 }
 
+MAKE_HOOK_MATCH(MultiplayerLocalActivePlayerGameplayAnimator_TransitionIntoFailedState, &MultiplayerLocalActivePlayerGameplayAnimator::TransitionIntoFailedState, void, MultiplayerLocalActivePlayerGameplayAnimator *self) {
+    MultiplayerLocalActivePlayerGameplayAnimator_TransitionIntoFailedState(self);
+
+    nlohmann::json data;
+    data["type"] = "SpectateInitialized";
+    data["title"] = getBeatmapLevel->songName;
+    data["author"] = getBeatmapLevel->songAuthorName;
+    data["duration"] = getBeatmapLevel->songDuration;
+    data["mappers"] = getBeatmapLevel->allMappers;
+    data["difficulty"] = difficultyToString(getDifficulty);
+
+    std::string jsonStr = data.dump();
+    CreateRequest(jsonStr);
+}
+
 MAKE_HOOK_MATCH(MultiplayerResultsViewController_DidActivate, &MultiplayerResultsViewController::DidActivate, void, MultiplayerResultsViewController *self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     MultiplayerResultsViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
 
@@ -455,6 +474,7 @@ extern "C" EXPORT void late_load() noexcept {
     INSTALL_HOOK(logger, PauseMenuManager_MenuButtonPressed);
     INSTALL_HOOK(logger, LevelCollectionViewController_DidActivate);
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerConnected);
+    INSTALL_HOOK(logger, MultiplayerLocalActivePlayerGameplayAnimator_TransitionIntoFailedState);
     INSTALL_HOOK(logger, MultiplayerResultsViewController_DidActivate);
     INSTALL_HOOK(logger, MultiplayerSessionManager_HandlePlayerDisconnected);
     INSTALL_HOOK(logger, MenuTransitionsHelper_StartStandardLevel);

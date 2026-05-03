@@ -3,6 +3,7 @@
   "name": "${mod_name}",
   "id": "${mod_id}",
   "version": "${version}",
+  "coverImage": "cover.jpg",
   "author": "Jess",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.40.8_7379",
