@@ -66,36 +66,47 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
             if (result.IsSuccessful() && firstActivation) {
                 std::string version = result.GetParsedData()["version"].GetString();
 
-                if (version != "0.1.5") {
-                    auto modal = BSML::Lite::CreateModal(self->transform, {100, 40}, []() {});
+                std::shared_future<WebUtils::JsonResponse> githubFutureData = GetLatestGithub();
 
-                    auto verticalLayout = BSML::Lite::CreateVerticalLayoutGroup(modal);
+                BSML::MainThreadScheduler::AwaitFuture<WebUtils::JsonResponse>(
+                    githubFutureData,
+                    [githubFutureData, self, version]() -> void {
+                        auto& result = githubFutureData.get();
 
-                    auto text = BSML::Lite::CreateText(verticalLayout, "It seems like you're using an outdated version of the local server.\nPlease update it to latest whenever you can.");
+                        std::string latestVersion = result.GetParsedData()["tag_name"].GetString();
+
+                        if (version != latestVersion) {
+                            auto modal = BSML::Lite::CreateModal(self->transform, {100, 40}, []() {});
+
+                            auto verticalLayout = BSML::Lite::CreateVerticalLayoutGroup(modal);
+
+                            auto text = BSML::Lite::CreateText(verticalLayout, "It seems like you're using an outdated version of the local server.\nPlease update it to latest whenever you can.");
     
-                    text->set_enableWordWrapping(true);
-                    text->set_alignment(TMPro::TextAlignmentOptions::Center);
+                            text->set_enableWordWrapping(true);
+                            text->set_alignment(TMPro::TextAlignmentOptions::Center);
 
-                    auto horizontalLayout = BSML::Lite::CreateHorizontalLayoutGroup(verticalLayout);
+                            auto horizontalLayout = BSML::Lite::CreateHorizontalLayoutGroup(verticalLayout);
 
-                    BSML::Lite::CreateUIButton(horizontalLayout, "Update", [modal]() {
-                        CreateRequest("POST", "/update", {});
-                        if (UnityW(modal) != nullptr) {
-                            modal->Hide();
+                            BSML::Lite::CreateUIButton(horizontalLayout, "Update", [modal]() {
+                                CreateRequest("POST", "/update", {});
+                                if (UnityW(modal) != nullptr) {
+                                    modal->Hide();
+                                }
+                            });
+                            BSML::Lite::CreateUIButton(horizontalLayout, "Close", [modal]() {
+                                if (UnityW(modal) != nullptr) {
+                                    modal->Hide();
+                                }
+                            });
+
+                            if (UnityW(modal) != nullptr) {
+                                modal->Show();
+                            }
+
+                            return;
                         }
-                    });
-                    BSML::Lite::CreateUIButton(horizontalLayout, "Close", [modal]() {
-                        if (UnityW(modal) != nullptr) {
-                            modal->Hide();
-                        }
-                    });
 
-                    if (UnityW(modal) != nullptr) {
-                        modal->Show();
-                    }
-
-                    return;
-                }
+                });
             } else {
                 logger.debug("Failed to retrieve version.");
 

@@ -68,3 +68,28 @@ std::future<WebUtils::JsonResponse> CreateRequest(
 
     return future;
 }
+
+std::future<WebUtils::JsonResponse> GetLatestGithub() {
+    std::promise<WebUtils::JsonResponse> promise;
+
+    auto future = promise.get_future();
+
+    std::thread(
+        [promise = std::move(promise)]() mutable {
+
+            try {
+                WebUtils::URLOptions path{ "https://api.github.com/repos/RainzDev/BeatSaberBridgeAPI.CPP/releases/latest" };
+                path.noEscape = true;
+
+                std::future<WebUtils::JsonResponse> response = WebUtils::GetAsync<WebUtils::JsonResponse>(path);
+
+                promise.set_value(response.get());
+            }
+            catch (...) {
+                promise.set_exception(std::current_exception());
+            }
+
+        }).detach();
+
+    return future;
+}
