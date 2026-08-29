@@ -385,6 +385,7 @@ MAKE_HOOK_MATCH(PauseController_HandlePauseMenuManagerDidPressRestartButton, &Pa
 
     nlohmann::json data;
     data["type"] = "BeatmapRestarted";
+    data["duration"] = getBeatmapLevel->songDuration;
 
     inSingleplayerGameplay = true;
 
@@ -497,6 +498,7 @@ extern "C" EXPORT void late_load() noexcept {
     INSTALL_HOOK(logger, MenuTransitionsHelper_StartMultiplayerLevel);
     INSTALL_HOOK(logger, PauseController_Pause);
     INSTALL_HOOK(logger, PauseController_HandlePauseMenuManagerDidPressContinueButton);
+    INSTALL_HOOK(logger, PauseController_HandlePauseMenuManagerDidPressRestartButton);
     INSTALL_HOOK(logger, MainFlowCoordinator_DidActivate);
     INSTALL_HOOK(logger, ResultsViewController_DidActivate);
     INSTALL_HOOK(logger, ResultsViewController_ContinueButtonPressed);

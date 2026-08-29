@@ -9,6 +9,7 @@
 extern/
 ndkpath.txt
 qpm_defines.cmake
+qpm.shared.json
 extern.cmake
 mod.json
 
