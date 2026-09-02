@@ -263,6 +263,23 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
 
     if (!level) return;
 
+    auto levelId = level->levelID;
+
+    nlohmann::json empty;
+    std::shared_future<WebUtils::JsonResponse> beatsaverData = CreateRequest("GET", "https://api.beatsaver.com/maps/id/" + levelId, empty);
+
+    std::string coverURL;
+
+    BSML::MainThreadScheduler::AwaitFuture<WebUtils::JsonResponse>(
+        beatsaverData,
+        [beatsaverData, level, difficulty, &coverURL]() -> void {
+            auto& result = beatsaverData.get();
+
+            if (result.IsSuccessful()) {
+                coverURL = result.GetParsedData()["versions"][0]["coverURL"].GetString();
+            }
+        });
+
     getBeatmapLevel = level;
     getDifficulty = difficulty;
     skipNextActivation = true;
@@ -276,6 +293,7 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
     data["duration"] = level->songDuration;
     data["mappers"] = level->allMappers;
     data["difficulty"] = difficultyToString(difficulty);
+    data["coverURL"] = !coverURL.empty() ? coverURL : nullptr;
 
     CreateRequest("POST", "/sendData", data);
 }
