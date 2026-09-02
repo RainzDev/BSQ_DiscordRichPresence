@@ -175,17 +175,17 @@
     {
       "dependency": {
         "id": "web-utils",
-        "versionRange": "=0.6.8",
+        "versionRange": "=0.6.9",
         "additionalData": {
-          "soLink": "https://github.com/bsq-ports/WebUtils/releases/download/v0.6.8/libweb-utils.so",
-          "debugSoLink": "https://github.com/bsq-ports/WebUtils/releases/download/v0.6.8/debug_libweb-utils.so",
+          "soLink": "https://github.com/bsq-ports/WebUtils/releases/download/v0.6.9/libweb-utils.so",
+          "debugSoLink": "https://github.com/bsq-ports/WebUtils/releases/download/v0.6.9/debug_libweb-utils.so",
           "overrideSoName": "libweb-utils.so",
-          "modLink": "https://github.com/bsq-ports/WebUtils/releases/download/v0.6.8/WebUtils.qmod",
-          "branchName": "version/v0_6_8",
+          "modLink": "https://github.com/bsq-ports/WebUtils/releases/download/v0.6.9/WebUtils.qmod",
+          "branchName": "version/v0_6_9",
           "cmake": false
         }
       },
-      "version": "0.6.8"
+      "version": "0.6.9"
     },
     {
       "dependency": {

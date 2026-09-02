@@ -79,6 +79,7 @@
 #include "Zenject/DiContainer.hpp"
 
 #include "metacore/shared/unity.hpp"
+#include "metacore/shared/songs.hpp"
 
 #include "utils/Schedulers/Heartbeats/heartbeat.hpp"
 #include "utils/Schedulers/Beatmap/beatmap.hpp"
