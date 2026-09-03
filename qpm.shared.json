@@ -96,10 +96,30 @@
         "id": "metacore",
         "versionRange": "^1.6.3",
         "additionalData": {}
+      },
+      {
+        "id": "beatsaverplusplus",
+        "versionRange": "^0.2.4",
+        "additionalData": {}
       }
     ]
   },
   "restoredDependencies": [
+    {
+      "dependency": {
+        "id": "beatsaverplusplus",
+        "versionRange": "=0.2.4",
+        "additionalData": {
+          "soLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.4/libbeatsaverplusplus.so",
+          "debugSoLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.4/debug_libbeatsaverplusplus.so",
+          "overrideSoName": "libbeatsaverplusplus.so",
+          "modLink": "https://github.com/bsq-ports/BeatSaverPlusPlus/releases/download/v0.2.4/BeatSaverPlusPlus.qmod",
+          "branchName": "version/v0_2_4",
+          "cmake": false
+        }
+      },
+      "version": "0.2.4"
+    },
     {
       "dependency": {
         "id": "bs-cordl",

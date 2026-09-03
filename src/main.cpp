@@ -84,6 +84,9 @@
 #include "utils/Schedulers/Heartbeats/heartbeat.hpp"
 #include "utils/Schedulers/Beatmap/beatmap.hpp"
 
+#include "beatsaverplusplus/shared/BeatSaver.hpp"
+#include "beatsaverplusplus/shared/Models/Beatmap.hpp"
+
 using namespace GlobalNamespace;
 
 bool skipNextActivation = false;
@@ -264,39 +267,43 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
 
     if (!level) return;
 
-    auto levelId = level->levelID;
+    auto hash = MetaCore::Songs::GetHash(level->levelID);
 
-    nlohmann::json empty;
-    std::shared_future<WebUtils::JsonResponse> beatsaverData = CreateRequest("GET", "https://api.beatsaver.com/maps/id/" + levelId, empty);
+    logger.info("Level hash: {}", hash);
 
-    std::string coverURL;
+    std::shared_future<BeatSaver::API::BeatmapResponse> beatmapFuture = BeatSaver::API::GetBeatmapByHashAsync(hash, [](float progress) {});
 
-    BSML::MainThreadScheduler::AwaitFuture<WebUtils::JsonResponse>(
-        beatsaverData,
-        [beatsaverData, level, difficulty, &coverURL]() -> void {
-            auto& result = beatsaverData.get();
+    BSML::MainThreadScheduler::AwaitFuture<BeatSaver::API::BeatmapResponse>(
+        beatmapFuture,
+        [beatmapFuture, level, difficulty]() -> void {
+            auto& response = beatmapFuture.get();
 
-            if (result.IsSuccessful()) {
-                coverURL = result.GetParsedData()["versions"][0]["coverURL"].GetString();
-            }
-        });
+            if (!response.IsSuccessful()) return;
+
+            auto beatmap = response.GetParsedData();
+            if (beatmap.GetVersions().empty()) return;
+
+            auto latestVersion = beatmap.GetVersions().front();
+            std::string coverURL = latestVersion.GetCoverURL();
+
+            nlohmann::json data;
+            data["type"] = "BeatmapInitialized";
+            data["title"] = level->songName;
+            data["author"] = level->songAuthorName;
+            data["duration"] = level->songDuration;
+            data["mappers"] = level->allMappers;
+            data["difficulty"] = difficultyToString(difficulty);
+            data["coverURL"] = !coverURL.empty() ? coverURL : nullptr;
+
+            CreateRequest("POST", "/sendData", data);
+        }
+    );
 
     getBeatmapLevel = level;
     getDifficulty = difficulty;
     skipNextActivation = true;
 
     inSingleplayerGameplay = true;
-
-    nlohmann::json data;
-    data["type"] = "BeatmapInitialized";
-    data["title"] = level->songName;
-    data["author"] = level->songAuthorName;
-    data["duration"] = level->songDuration;
-    data["mappers"] = level->allMappers;
-    data["difficulty"] = difficultyToString(difficulty);
-    data["coverURL"] = !coverURL.empty() ? coverURL : nullptr;
-
-    CreateRequest("POST", "/sendData", data);
 }
 
 MAKE_HOOK_MATCH(SongStartSyncController_StartSong, &SongStartSyncController::StartSong, void, SongStartSyncController *self, PlayersSpecificSettingsAtGameStartModel* playersSpecificSettingsAtGameStartModel, ::StringW sessionGameId) {

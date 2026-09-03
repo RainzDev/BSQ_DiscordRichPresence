@@ -95,6 +95,11 @@
       "id": "metacore",
       "versionRange": "^1.6.3",
       "additionalData": {}
+    },
+    {
+      "id": "beatsaverplusplus",
+      "versionRange": "^0.2.4",
+      "additionalData": {}
     }
   ]
 }
