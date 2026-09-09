@@ -33,6 +33,14 @@ namespace {
     constexpr jlong kApplicationId = 1028340906740420711LL;
     constexpr const char* kRpcVersion = "1";
     constexpr const char* kHelperSource = "/sdcard/ModData/com.beatgames.beatsaber/Mods/DiscordRichPresence/discord-rpc-helper.jar";
+    // Discord's Quest RPC service currently renders the registered asset key
+    // "quest" as a question-mark placeholder even though that key exists for
+    // this application. The same service already accepts HTTPS cover artwork,
+    // so address the registered asset by its stable Discord CDN URL instead.
+    // This affects only the optional Quest platform badge; Desktop Companion
+    // continues to resolve its own "quest" asset exactly as before.
+    constexpr const char* kQuestBadgeUrl =
+        "https://cdn.discordapp.com/app-assets/1028340906740420711/1502435641714278550.png";
 
     JavaVM* g_vm = nullptr;
     // These references are captured from the Java-created Unity thread. A
@@ -837,7 +845,7 @@ namespace {
             if (!cover.empty() && cover != "null") assets["large_image"] = cover;
         }
         if (getConfig().QuestShowPlatform.GetValue()) {
-            assets["small_image"] = "quest";
+            assets["small_image"] = kQuestBadgeUrl;
             assets["small_text"] = "Meta Quest";
         }
         if (!assets.empty()) activity["assets"] = assets;
