@@ -28,6 +28,28 @@ jobs:
           submodules: true
           lfs: true
 
+      # The QMOD copies a DEX jar into Beat Saber's ModData directory. Build it
+      # from source on every CI run so an artifact can never silently contain a
+      # stale local helper or omit Quest Discord support entirely.
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android helper toolchain
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Build Discord RPC helper
+        shell: pwsh
+        run: ./scripts/build-discord-rpc-helper.ps1
+
+      - name: Test MBF manifest injector
+        run: python3 -m unittest discover -s tests -p "test_*.py" -v
+
       - name: Setup QPM
         uses: Fernthedev/qpm-action@v1
         with:
@@ -40,16 +62,29 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}
           qpm qmod zip
+          python3 scripts/inject_mbf_manifest_requirements.py DiscordRichPresence.qmod
 
       - name: Get Output Names
         id: names
         run: |
-          qmod_files=( "*.qmod" )
+          # Do not quote the complete glob: that preserves the asterisk as a
+          # literal artifact name, which upload-artifact rejects. Fail clearly
+          # if a build produces no output or ambiguous multiple outputs.
+          shopt -s nullglob
+          qmod_files=( *.qmod )
+          if (( ${#qmod_files[@]} != 1 )); then
+            echo "Expected exactly one QMOD, found ${#qmod_files[@]}" >&2
+            exit 1
+          fi
           echo "QMOD=${qmod_files[0]}" >> ${GITHUB_OUTPUT}
 
           cd build
 
-          lib_files=( "lib${module_id}*.so" )
+          lib_files=( lib"${module_id}"*.so )
+          if (( ${#lib_files[@]} != 1 )); then
+            echo "Expected exactly one native library, found ${#lib_files[@]}" >&2
+            exit 1
+          fi
           echo "LIB=${lib_files[0]}" >> ${GITHUB_OUTPUT}
 
       - name: Upload Artifact

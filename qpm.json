@@ -6,7 +6,7 @@
   "info": {
     "name": "Discord Rich Presence",
     "id": "discordrichpresence",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "url": null,
     "additionalData": {
       "overrideSoName": "libdiscordrichpresence.so",

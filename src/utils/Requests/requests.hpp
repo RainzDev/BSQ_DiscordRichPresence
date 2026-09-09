@@ -6,3 +6,5 @@
 
 std::future<WebUtils::JsonResponse> CreateRequest(std::string method, std::string URLPath, nlohmann::json jsonData);
 std::future<WebUtils::JsonResponse> GetLatestGithub();
+void SendPresenceEvent(const nlohmann::json& jsonData) noexcept;
+void SetQuestDiscordMode(bool enabled) noexcept;

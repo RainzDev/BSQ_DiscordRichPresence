@@ -4,7 +4,19 @@ A Beat Saber Quest mod for displaying status on Discord
 
 ![Alt Text](cover.jpg)
 
-## 📋 Requirements
+## Presence Modes
+
+The in-game `Discord Rich Presence` settings menu can route the same Beat Saber events in either of two ways:
+
+- **Desktop Companion** keeps the original IP/port workflow and does not apply the Quest privacy settings.
+- **Quest Discord App** binds directly to Discord's exported Android Social RPC service. It does not need a PC and exposes a 5/10/15-second gameplay update-speed selector plus per-field privacy switches for status, song metadata, gameplay stats, timer, artwork, platform badge, and multiplayer details.
+
+Disabled Quest fields are omitted from the Discord activity rather than replaced with misleading zero or blank values.
+
+> [!IMPORTANT]
+> Quest Discord mode requires Beat Saber's manifest to contain a package-visibility query for `com.discord`. The QMOD declares this through the optional `mbfManifestRequirements` extension, which supported MBF builds apply automatically without another prompt. Older MBF releases and other installers may ignore the extension; if the Discord service is unavailable, the mod reports an actionable status in its settings. Desktop Companion mode does not need this manifest entry.
+
+## 📋 Desktop Companion Requirements
 
 - ✅ Modded Beat Saber Quest (MBF)
 - ✅ Local server handling Discord Rich Presence updates
@@ -73,7 +85,7 @@ If your Discord client is closed or not installed, it'll instead open up a page 
 ### 5. Configure the Mod
 
 1. Open Beat Saber on your Quest
-2. Go to `Settings → Mod Settings → DRP`
+2. Open `Mods → Discord Presence`, or go to `Settings → Mod Settings → Discord Rich Presence`.
 3. Enter your PC's [private IP](https://github.com/RainzDev/BSQ_DiscordRichPresence?tab=readme-ov-file#finding-your-private-ip) and port. (The port must be set as `8080` unless you know what you're doing)
 4. Press "Ok"
 
@@ -135,18 +147,24 @@ inet 192.168.x.x/24
 - [x] Fix heartbeats not being sent when in a beatmap
 - [x] Fix result view being automatically switched to level selection
 - [x] Fix beatmap not showing the stats if restarted
- 
+
 ## Building
 
 For a full introduction to Quest modding, visit the [BSMG Wiki](https://bsmg.wiki/modding/quest/intro.html).
 
-To just build, install [QPM](https://github.com/QuestPackageManager/QPM.CLI/releases/latest), [CMake](https://cmake.org/download/), [Ninja](https://github.com/ninja-build/ninja/releases/latest), the [Android NDK](https://developer.android.com/ndk/downloads), and [Python 3](https://www.python.org/downloads/), then run:
+To build, install [QPM](https://github.com/QuestPackageManager/QPM.CLI/releases/latest), [CMake](https://cmake.org/download/), [Ninja](https://github.com/ninja-build/ninja/releases/latest), the [Android NDK](https://developer.android.com/ndk/downloads), Python 3, JDK 21, and Android SDK build tools 36. The helper script reads `JAVA_HOME`/PATH and `ANDROID_HOME` or `ANDROID_SDK_ROOT`; its original Visual Studio Android locations remain Windows fallbacks.
 
 ```sh
+pwsh ./scripts/build-discord-rpc-helper.ps1
 qpm ndk resolve
 qpm restore
 qpm qmod zip
+python scripts/inject_mbf_manifest_requirements.py DiscordRichPresence.qmod
 ```
+
+The final step is required because QPM.CLI currently drops unknown root fields while generating
+`mod.json`. The script validates the MBF extension, rewrites the archive atomically, and verifies
+that every non-manifest payload remains byte-for-byte unchanged.
 
 ## Credits
 

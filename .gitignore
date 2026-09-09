@@ -19,9 +19,13 @@ build/
 *.qmod
 
 # Script outputs and artifacts
-*.txt
+__pycache__/
+*.pyc
 *.log
 *.html
 
-# Exceptions
-!CMakeLists.txt
+# Local AI-assisted review and planning notes. These files document temporary
+# analysis rather than the source needed to build or maintain the mod.
+CODE_REVIEW*.md
+QUEST_DISCORD_POC.md
+QUEST_DISCORD_STANDALONE_HELPER_PLAN.md

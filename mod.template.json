@@ -8,6 +8,11 @@
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.40.8_7379",
   "description": "A Beat Saber Quest mod for displaying stats on Discord",
+  "mbfManifestRequirements": {
+    "queryPackages": [
+      "com.discord"
+    ]
+  },
   "dependencies": [
     {
       "version": "*",
@@ -18,5 +23,10 @@
   "modFiles": [],
   "lateModFiles": [],
   "libraryFiles": [],
-  "fileCopies": []
+  "fileCopies": [
+    {
+      "name": "discord-rpc-helper.jar",
+      "destination": "/sdcard/ModData/com.beatgames.beatsaber/Mods/DiscordRichPresence/discord-rpc-helper.jar"
+    }
+  ]
 }

@@ -54,7 +54,7 @@ add_library(
 )
 
 # Add include directories to compilation
-target_include_directories(${COMPILE_ID} PRIVATE ${INCLUDE_DIR})
+target_include_directories(${COMPILE_ID} PRIVATE ${INCLUDE_DIR} ${SOURCE_DIR})
 
 # Link necessary Android libraries
 target_link_libraries(${COMPILE_ID} PRIVATE -llog)
