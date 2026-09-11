@@ -54,6 +54,8 @@ namespace {
     BSML::ToggleSetting* FitToggleToSettingsPanel(BSML::ToggleSetting* toggle) {
         if (!toggle || !toggle->get_gameObject()) return toggle;
 
+        toggle->text->set_enableWordWrapping(true);
+
         auto* object = toggle->get_gameObject().ptr();
         auto* layout = object->GetComponent<UnityEngine::UI::LayoutElement*>();
         if (!layout) layout = object->AddComponent<UnityEngine::UI::LayoutElement*>();
@@ -181,18 +183,9 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
     auto questTitle = BSML::Lite::CreateText(container->get_transform(), "Quest Discord Privacy");
     if (questTitle) {
         questTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
+        questTitle->set_enableWordWrapping(true);
         ReserveTextRow(questTitle, 6.0f);
         questControls->push_back(questTitle->get_gameObject());
-    }
-    auto questHelp = BSML::Lite::CreateText(
-        container->get_transform(),
-        "Sends directly to the Discord app installed on this Quest. Discord must be open or signed in.",
-        3.0f);
-    if (questHelp) {
-        questHelp->set_enableWordWrapping(true);
-        questHelp->set_alignment(TMPro::TextAlignmentOptions::Center);
-        ReserveTextRow(questHelp, 9.0f);
-        questControls->push_back(questHelp->get_gameObject());
     }
 
     auto* updateSpeedDropdown = BSML::Lite::CreateDropdown(
