@@ -182,6 +182,8 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
 
     auto questTitle = BSML::Lite::CreateText(container->get_transform(), "Quest Discord Privacy");
     if (questTitle) {
+        auto questTitleRect = questTitle->get_rectTransform();
+        questTitleRect->set_sizeDelta({questTitleRect->get_sizeDelta().x, 6.0f});
         questTitle->set_alignment(TMPro::TextAlignmentOptions::Center);
         questTitle->set_enableWordWrapping(true);
         ReserveTextRow(questTitle, 6.0f);
