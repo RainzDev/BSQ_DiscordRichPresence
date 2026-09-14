@@ -275,7 +275,18 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
             logger.error("CreateQuestContent reconnect callback failed with a non-standard exception");
         }
     });
-    if (reconnectButton) questControls->push_back(reconnectButton->get_gameObject());
+    if (reconnectButton) {
+        questControls->push_back(reconnectButton->get_gameObject());
+
+        auto* layoutButton = reconnectButton->get_gameObject()->GetComponent<UnityEngine::UI::LayoutElement*>();
+        if (!layoutButton) layoutButton = reconnectButton->get_gameObject()->AddComponent<UnityEngine::UI::LayoutElement*>();
+
+        if (layoutButton) {
+            layoutButton->set_minWidth(40.0f);
+            layoutButton->set_preferredWidth(40.0f);
+            layoutButton->set_flexibleWidth(0.0f);
+        }
+    }
 
     // A control may have been destroyed by a concurrent view transition after
     // it was created; apply visibility only to still-valid objects.
