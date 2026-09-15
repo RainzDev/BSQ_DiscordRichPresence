@@ -60,6 +60,7 @@
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
 #include "GlobalNamespace/TutorialSongController.hpp"
 #include "GlobalNamespace/MissionLevelScenesTransitionSetupDataSO.hpp"
+#include "GlobalNamespace/MissionSelectionMapViewController.hpp"
 #include "GlobalNamespace/MissionLevelGameplayManager.hpp"
 #include "GlobalNamespace/PauseController.hpp"
 #include "GlobalNamespace/MenuDestination.hpp"
@@ -811,6 +812,16 @@ MAKE_HOOK_MATCH(ResultsViewController_ContinueButtonPressed, &ResultsViewControl
     ResetBeatmapSession();
     nlohmann::json data;
     data["type"] = "LevelSelectionMenuInitialized";
+
+    SendPresenceEvent(data);
+}
+
+MAKE_HOOK_MATCH(MissionSelectionMapViewController_DidActivate, &MissionSelectionMapViewController::DidActivate, void, MissionSelectionMapViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
+    MissionSelectionMapViewController_DidActivate(self, firstActivation, addedToHierarchy, screenSystemEnabling);
+
+    ResetBeatmapSession();
+    nlohmann::json data;
+    data["type"] = "MissionSelectionMenuInitialized";
 
     SendPresenceEvent(data);
 }

@@ -808,6 +808,8 @@ namespace {
             if (getConfig().QuestShowStatus.GetValue()) stateText = "Status: Main Menu";
         } else if (state.phase == "LevelSelect") {
             if (getConfig().QuestShowStatus.GetValue()) stateText = "Status: Level Selection Menu";
+        } else if (state.phase == "MissionSelect") {
+            if (getConfig().QuestShowStatus.GetValue()) stateText = "Status: Campaign Map Selection Menu";
         } else if (state.phase == "Playing" || state.phase == "MultiplayerPlaying" || state.phase == "Spectating") {
             stateText = GameplayState(state);
             details = SongDetails(state);
@@ -975,6 +977,8 @@ namespace QuestDiscord {
             g_state.phase = "MainMenu";
         } else if (type == "LevelSelectionMenuInitialized") {
             g_state.phase = "LevelSelect";
+        } else if (type == "MissionSelectionMenuInitialized") {
+            g_state.phase = "MissionSelect";
         } else if (type == "BeatmapInitialized") {
             StartSong(g_state, event, "Playing");
         } else if (type == "BeatmapCoverResolved") {
