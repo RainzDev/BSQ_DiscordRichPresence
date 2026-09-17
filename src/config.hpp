@@ -11,7 +11,7 @@ DECLARE_CONFIG(Config) {
 
     // Keep Quest transport/privacy settings separate from the desktop payload;
     // switching back to the companion therefore preserves its original format.
-    CONFIG_VALUE(UseQuestDiscord, bool, "Use Quest Discord App", false);
+    CONFIG_VALUE(UseQuestDiscord, bool, "Use Quest Discord App", true);
 
     // Store the native Quest activity cadence independently from the desktop
     // companion's fixed ten-second update loop. Older configs omit this entry

@@ -303,7 +303,7 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
 
     if (!self) return;
 
-    if (firstActivation && getConfig().FirstTime.GetValue()) {
+    if (firstActivation && QuestDiscord::GetConnectionStatus() == "Not Connected" || QuestDiscord::GetConnectionStatus() == "ERROR") {
         auto modal = BSML::Lite::CreateModal(self->transform, {100, 60}, []() {});
         // UI creation is optional and can fail under a replaced/custom menu;
         // abort this informational popup without affecting the main menu.
@@ -312,7 +312,7 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
         auto verticalLayout = BSML::Lite::CreateVerticalLayoutGroup(modal);
         if (!verticalLayout) return;
 
-        auto text = BSML::Lite::CreateText(verticalLayout, "Thank you for installing the mod! To setup your Discord RPC, please\nlook through the instructions by pressing \"Open Instructions\". ");
+        auto text = BSML::Lite::CreateText(verticalLayout, "Unable to connect to Discord RPC. Please make sure to enable \"Discord\nVisibility\" in Addition Options from ModsBeforeFriday and then repatch");
         if (text) {
             text->set_enableWordWrapping(true);
             text->set_alignment(TMPro::TextAlignmentOptions::Center);
@@ -325,7 +325,7 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
         auto safeModal = UnityW(modal);
 
         BSML::Lite::CreateUIButton(horizontalLayout, "Open Instructions", []() {
-            UnityEngine::Application::OpenURL("https://github.com/RainzDev/BSQ_DiscordRichPresence#-quick-start");
+            UnityEngine::Application::OpenURL("https://github.com/RainzDev/BSQ_DiscordRichPresence");
         });
         BSML::Lite::CreateUIButton(horizontalLayout, "Close", [safeModal]() mutable {
             getConfig().FirstTime.SetValue(false);
