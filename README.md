@@ -16,13 +16,26 @@ Disabled Quest fields are omitted from the Discord activity rather than replaced
 > [!IMPORTANT]
 > Quest Discord mode requires Beat Saber's manifest to contain a package-visibility query for `com.discord`. The QMOD declares this through the optional `mbfManifestRequirements` extension, which supported MBF builds apply automatically without another prompt. Older MBF releases and other installers may ignore the extension; if the Discord service is unavailable, the mod reports an actionable status in its settings. Desktop Companion mode does not need this manifest entry.
 
+---
+
+## 📋 Quest Discord App Requirements
+
+- ✅ Modded Beat Saber Quest (MBF)
+- ✅ Discord installed in your headset
+- ✅ Enable Discord Visibility via ModsBeforeFriday.
+
+If you're not sure how to enable Discord Visibility, please take a look at this video here:
+
+[https://www.youtube.com/watch?v=kxzAh3u6qJE]
+
+
+---
+
 ## 📋 Desktop Companion Requirements
 
 - ✅ Modded Beat Saber Quest (MBF)
 - ✅ Local server handling Discord Rich Presence updates
 - ✅ Same network connection (Quest ↔ PC)
-
----
 
 ## 🚀 Quick Start
 

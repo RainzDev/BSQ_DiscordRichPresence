@@ -844,7 +844,11 @@ namespace {
             state.phase == "Spectating" || state.phase == "Paused" || state.phase == "Failed";
         if (coverPhase && getConfig().QuestShowCoverArt.GetValue()) {
             const std::string cover = JsonString(state.song, "coverURL");
-            if (!cover.empty() && cover != "null") assets["large_image"] = cover;
+            if (!cover.empty() && cover != "null") {
+                assets["large_image"] = cover;
+            } else {
+                assets["large_image"] = "";
+            }
         }
         if (getConfig().QuestShowPlatform.GetValue()) {
             assets["small_image"] = kQuestBadgeUrl;

@@ -10,6 +10,10 @@ import android.os.IInterface;
 import android.os.Parcel;
 import android.os.RemoteException;
 import android.util.Log;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.content.Intent;
+import android.os.Process;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -152,11 +156,49 @@ public final class DiscordRpcBridge {
         }
     };
 
+    // Receiver to detect screen off / shutdown so we can clear Discord activity
+    private BroadcastReceiver screenReceiver = null;
+    private volatile boolean receiverRegistered = false;
+
     public DiscordRpcBridge(Context context) {
         // Some test or vendor contexts return null here. Retain the validated
         // Activity context rather than storing a null reference for bindService.
         Context applicationContext = context.getApplicationContext();
         this.context = applicationContext != null ? applicationContext : context;
+
+        // Register a receiver to clear activity when the device screen turns
+        // off or the system is shutting down. Use the application context so
+        // the receiver persists beyond a single Activity lifecycle.
+        try {
+            screenReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context ctx, Intent intent) {
+                    String action = intent == null ? null : intent.getAction();
+                    if (Intent.ACTION_SCREEN_OFF.equals(action) || Intent.ACTION_SHUTDOWN.equals(action)) {
+                        try {
+                            String clear = "{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":" + Process.myPid() + ",\"activity\":null},\"nonce\":\"power_off\"}";
+                            synchronized (DiscordRpcBridge.this) {
+                                // Best-effort: send the clear frame even if not
+                                // currently bound/connected. sendFrame will
+                                // queue it as pending if appropriate.
+                                sendFrame(clear);
+                            }
+                        } catch (Exception e) {
+                            Log.w(TAG, "Failed to send clear activity on power-off", e);
+                        }
+                    }
+                }
+            };
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_SCREEN_OFF);
+            filter.addAction(Intent.ACTION_SHUTDOWN);
+            this.context.registerReceiver(screenReceiver, filter);
+            receiverRegistered = true;
+        } catch (Exception e) {
+            Log.w(TAG, "Could not register screen-off/shutdown receiver", e);
+            screenReceiver = null;
+            receiverRegistered = false;
+        }
     }
 
     public synchronized boolean connect(long applicationId, String version) {
@@ -244,6 +286,15 @@ public final class DiscordRpcBridge {
             } catch (IllegalArgumentException error) {
                 Log.w(TAG, "Unbind failed", error);
             }
+        }
+        // Unregister our receiver when disconnecting the bridge.
+        if (screenReceiver != null && receiverRegistered) {
+            try {
+                context.unregisterReceiver(screenReceiver);
+            } catch (IllegalArgumentException error) {
+                Log.w(TAG, "Unregister failed", error);
+            }
+            receiverRegistered = false;
         }
         state = "DISCONNECTED";
     }

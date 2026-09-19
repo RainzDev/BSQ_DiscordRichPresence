@@ -303,38 +303,43 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
 
     if (!self) return;
 
-    if (firstActivation && QuestDiscord::GetConnectionStatus() == "Not Connected" || QuestDiscord::GetConnectionStatus() == "ERROR") {
-        auto modal = BSML::Lite::CreateModal(self->transform, {100, 60}, []() {});
-        // UI creation is optional and can fail under a replaced/custom menu;
-        // abort this informational popup without affecting the main menu.
-        if (!modal) return;
+    if (firstActivation) {
+        const std::string qdStatus = QuestDiscord::GetConnectionStatus();
+        if (qdStatus.find("ERROR") != std::string::npos ||
+            qdStatus.find("CLOSED") != std::string::npos ||
+            qdStatus == "Not connected") {
+            auto modal = BSML::Lite::CreateModal(self->transform, {100, 40}, []() {});
+            // UI creation is optional and can fail under a replaced/custom menu;
+            // abort this informational popup without affecting the main menu.
+            if (!modal) return;
 
-        auto verticalLayout = BSML::Lite::CreateVerticalLayoutGroup(modal);
-        if (!verticalLayout) return;
+            auto verticalLayout = BSML::Lite::CreateVerticalLayoutGroup(modal);
+            if (!verticalLayout) return;
 
-        auto text = BSML::Lite::CreateText(verticalLayout, "Unable to connect to Discord RPC. Please make sure to enable \"Discord\nVisibility\" in Addition Options from ModsBeforeFriday and then repatch");
-        if (text) {
-            text->set_enableWordWrapping(true);
-            text->set_alignment(TMPro::TextAlignmentOptions::Center);
+            auto text = BSML::Lite::CreateText(verticalLayout, "Unable to connect to Discord RPC. Please make sure to enable \"Discord\nVisibility\" in Additional Options from ModsBeforeFriday and then repatch.\nIf you are still unsure, you can view a quick video tutorial.");
+            if (text) {
+                text->set_enableWordWrapping(true);
+                text->set_alignment(TMPro::TextAlignmentOptions::Center);
+            }
+
+            auto horizontalLayout = BSML::Lite::CreateHorizontalLayoutGroup(verticalLayout);
+            if (!horizontalLayout) return;
+            // Capture a Unity-aware reference so button callbacks can detect a
+            // modal destroyed by another menu transition.
+            auto safeModal = UnityW(modal);
+
+            BSML::Lite::CreateUIButton(horizontalLayout, "Tutorial", []() {
+                UnityEngine::Application::OpenURL("https://www.youtube.com/watch?v=kxzAh3u6qJE");
+            });
+            BSML::Lite::CreateUIButton(horizontalLayout, "Close", [safeModal]() mutable {
+                getConfig().FirstTime.SetValue(false);
+                if (safeModal) safeModal->Hide();
+            });
+
+            if (safeModal) safeModal->Show();
+
+            return;
         }
-
-        auto horizontalLayout = BSML::Lite::CreateHorizontalLayoutGroup(verticalLayout);
-        if (!horizontalLayout) return;
-        // Capture a Unity-aware reference so button callbacks can detect a
-        // modal destroyed by another menu transition.
-        auto safeModal = UnityW(modal);
-
-        BSML::Lite::CreateUIButton(horizontalLayout, "Open Instructions", []() {
-            UnityEngine::Application::OpenURL("https://github.com/RainzDev/BSQ_DiscordRichPresence");
-        });
-        BSML::Lite::CreateUIButton(horizontalLayout, "Close", [safeModal]() mutable {
-            getConfig().FirstTime.SetValue(false);
-            if (safeModal) safeModal->Hide();
-        });
-
-        if (safeModal) safeModal->Show();
-
-        return;
     }
 
     // The version check is informational and should run only once per menu
