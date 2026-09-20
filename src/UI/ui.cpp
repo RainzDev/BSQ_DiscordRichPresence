@@ -294,6 +294,15 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
     for (auto& control : *questControls) if (control) control->SetActive(useQuest);
 }
 
+MAKE_HOOK_MATCH(ModalView_HandleParentViewControllerDidDeactivate, &HMUI::ModalView::HandleParentViewControllerDidDeactivate, void, HMUI::ModalView* self, bool removedFromHierarchy, bool screenSystemDisabling) {
+
+    bool previousAnimateParentCanvas = self->_animateParentCanvas;
+    self->_animateParentCanvas = screenSystemDisabling;
+    self->Hide(false, BSML::MakeSystemAction([self, previousAnimateParentCanvas] {
+        self->_animateParentCanvas = previousAnimateParentCanvas;
+    }));
+}
+
 MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::DidActivate, void, MainMenuViewController* self, bool firstActivation, bool addedToHierachy, bool screenSystemEnabling) {
     MainMenuViewController_DidActivate(self, firstActivation, addedToHierachy, screenSystemEnabling);
 
@@ -467,4 +476,5 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
 
 void InstallUIHooks() {
     INSTALL_HOOK(logger, MainMenuViewController_DidActivate);
+    INSTALL_HOOK(logger, ModalView_HandleParentViewControllerDidDeactivate);
 }

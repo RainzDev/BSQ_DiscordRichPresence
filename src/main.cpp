@@ -844,7 +844,7 @@ extern "C" EXPORT void setup(CModInfo* info) noexcept {
 
     getConfig().Init(modInfo);
     const bool settingsRegistered = BSML::Register::RegisterSettingsMenu(
-        "Discord Rich Presence", DidActivate, true);
+        "Discord Presence", DidActivate, true);
     logger.info("Discord Rich Presence settings menu registration: {}",
         settingsRegistered ? "success" : "already registered");
 
