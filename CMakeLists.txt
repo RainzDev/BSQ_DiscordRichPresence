@@ -38,6 +38,7 @@ add_compile_definitions("PAPER_ROOT_FOLDER_LENGTH=${FOLDER_LENGTH}")
 
 # Define the code directories
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(SHARED_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shared)
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Recursively get all source files
@@ -55,6 +56,7 @@ add_library(
 
 # Add include directories to compilation
 target_include_directories(${COMPILE_ID} PRIVATE ${INCLUDE_DIR} ${SOURCE_DIR})
+target_include_directories(${COMPILE_ID} PUBLIC ${SHARED_DIR})
 
 # Link necessary Android libraries
 target_link_libraries(${COMPILE_ID} PRIVATE -llog)

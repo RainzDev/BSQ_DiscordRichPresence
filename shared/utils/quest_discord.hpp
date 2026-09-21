@@ -1,15 +1,17 @@
 #pragma once
 
+#include "config.h"
+
 #include <string>
 
 #include "nlohmann/json.hpp"
 
 namespace QuestDiscord {
-    bool Initialize();
-    void Shutdown();
-    void HandleEvent(const nlohmann::json& event);
-    void Refresh();
-    std::string GetConnectionStatus();
+    EXPORT bool Initialize();
+    EXPORT void Shutdown();
+    EXPORT void HandleEvent(const nlohmann::json& event);
+    EXPORT void Refresh();
+    EXPORT std::string GetConnectionStatus();
     // Used only for diagnostics; this does not load or execute the helper.
-    bool IsHelperAvailable();
+    EXPORT bool IsHelperAvailable();
 }
