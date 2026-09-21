@@ -30,4 +30,8 @@ namespace QuestDiscord {
     // Used only for diagnostics; this does not load or execute the helper.
     EXPORT bool IsHelperAvailable();
     EXPORT nlohmann::json BuildActivity(const PresenceState& state);
+    // Library-style API: send a fully custom activity object immediately.
+    EXPORT void SendCustomActivity(const nlohmann::json& activity);
+    // Send a pre-built "frame" object (contains cmd/args/nonce) directly.
+    EXPORT void SendCustomFrame(const nlohmann::json& frame);
 }

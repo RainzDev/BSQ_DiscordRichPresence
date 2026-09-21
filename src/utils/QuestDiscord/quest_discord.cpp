@@ -875,12 +875,44 @@ namespace {
         return activity;
     }
 
+    
+
+    // Build the activity that should be sent for the given state, taking
+    // Library-facing helper not tied to configuration. Returns the standard
+    // activity built from state; callers may modify or send it directly.
+    nlohmann::json BuildEffectiveActivity(const PresenceState& state) {
+        return BuildActivity(state);
+    }
+
+    // Exported library API implementations (these are also callable when the
+    // code is linked as a library). They enqueue frames for immediate send.
+    void SendCustomActivity(const nlohmann::json& activity) {
+        nlohmann::json frame = {
+            {"cmd", "SET_ACTIVITY"},
+            {"args", {{"pid", getpid()}, {"activity", activity}}},
+            {"nonce", std::to_string(g_nonce.fetch_add(1))}
+        };
+        try {
+            GetFrameDispatcher().Enqueue(std::move(frame));
+        } catch (const std::exception& e) {
+            logger.error("SendCustomActivity failed to enqueue activity: {}", e.what());
+        }
+    }
+
+    void SendCustomFrame(const nlohmann::json& frame) {
+        try {
+            GetFrameDispatcher().Enqueue(frame);
+        } catch (const std::exception& e) {
+            logger.error("SendCustomFrame failed to enqueue frame: {}", e.what());
+        }
+    }
+
     void SendCurrentLocked() {
         nlohmann::json frame = {
             {"cmd", "SET_ACTIVITY"},
             {"args", {
                 {"pid", getpid()},
-                {"activity", BuildActivity(g_state)}
+                {"activity", BuildEffectiveActivity(g_state)}
             }},
             {"nonce", std::to_string(g_nonce.fetch_add(1))}
         };
@@ -910,6 +942,26 @@ namespace {
 }
 
 namespace QuestDiscord {
+    void SendCustomActivity(const nlohmann::json& activity) {
+        try {
+            nlohmann::json frame = {
+                {"cmd", "SET_ACTIVITY"},
+                {"args", {{"pid", getpid()}, {"activity", activity}}},
+                {"nonce", std::to_string(g_nonce.fetch_add(1))}
+            };
+            GetFrameDispatcher().Enqueue(std::move(frame));
+        } catch (const std::exception& e) {
+            logger.error("QuestDiscord::SendCustomActivity failed: {}", e.what());
+        }
+    }
+
+    void SendCustomFrame(const nlohmann::json& frame) {
+        try {
+            GetFrameDispatcher().Enqueue(frame);
+        } catch (const std::exception& e) {
+            logger.error("QuestDiscord::SendCustomFrame failed: {}", e.what());
+        }
+    }
     bool Initialize() {
         std::lock_guard<std::mutex> lock(g_jniMutex);
         // Use the same lifetime rule on the Unity path. It is normally already
@@ -976,6 +1028,59 @@ namespace QuestDiscord {
     void HandleEvent(const nlohmann::json& event) {
         const std::string type = JsonString(event, "type");
         if (type.empty() || type == "HeartbeatReceiver") return;
+        // Special-case custom events that should send user-provided activity
+        // or complete frames immediately without changing the stored state.
+        if (type == "CustomActivity" || type == "CustomFrame" || type == "CustomEvent") {
+            // Prefer an explicit full "frame" object if present.
+            if (event.contains("frame") && event["frame"].is_object()) {
+                try {
+                    GetFrameDispatcher().Enqueue(event["frame"]);
+                    logger.info("Queued custom frame event for immediate send");
+                } catch (const std::exception& e) {
+                    logger.error("Could not enqueue custom frame: {}", e.what());
+                }
+                return;
+            }
+            // Otherwise accept an "activity" object and wrap it in the
+            // standard SET_ACTIVITY frame.
+            if (event.contains("activity") && event["activity"].is_object()) {
+                nlohmann::json frame = {
+                    {"cmd", "SET_ACTIVITY"},
+                    {"args", {{"pid", getpid()}, {"activity", event["activity"]}}},
+                    {"nonce", std::to_string(g_nonce.fetch_add(1))}
+                };
+                try {
+                    GetFrameDispatcher().Enqueue(std::move(frame));
+                    logger.info("Queued custom activity event for immediate send");
+                } catch (const std::exception& e) {
+                    logger.error("Could not enqueue custom activity: {}", e.what());
+                }
+                return;
+            }
+            // Also allow passing a raw JSON string in "activity_json".
+            if (event.contains("activity_json") && event["activity_json"].is_string()) {
+                const std::string text = event["activity_json"].get_ref<const std::string&>();
+                try {
+                    auto parsed = nlohmann::json::parse(text);
+                    if (parsed.is_object()) {
+                        nlohmann::json frame = {
+                            {"cmd", "SET_ACTIVITY"},
+                            {"args", {{"pid", getpid()}, {"activity", parsed}}},
+                            {"nonce", std::to_string(g_nonce.fetch_add(1))}
+                        };
+                        GetFrameDispatcher().Enqueue(std::move(frame));
+                        logger.info("Queued custom activity JSON for immediate send");
+                    } else {
+                        logger.warn("Custom activity JSON did not parse to an object; ignoring");
+                    }
+                } catch (const std::exception& e) {
+                    logger.warn("Failed to parse custom activity_json: {}", e.what());
+                }
+                return;
+            }
+            logger.warn("Custom event received with no activity/frame; ignoring");
+            return;
+        }
 
         std::lock_guard<std::mutex> lock(g_stateMutex);
         if (type == "MainMenuInitialized") {
