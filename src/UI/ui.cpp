@@ -13,7 +13,7 @@
 #include "web-utils/shared/WebUtils.hpp"
 
 #include "../src/utils/Requests/requests.hpp"
-#include "../src/utils/QuestDiscord/quest_discord.hpp"
+#include "../shared/utils/quest_discord.hpp"
 
 #include <array>
 #include <memory>

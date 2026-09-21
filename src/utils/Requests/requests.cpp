@@ -4,7 +4,7 @@
 #include "beatsaber-hook/shared/config/config-utils.hpp"
 #include "main.hpp"
 #include "web-utils/shared/WebUtils.hpp"
-#include "utils/QuestDiscord/quest_discord.hpp"
+#include "../shared/utils/quest_discord.hpp"
 
 #include <stdexcept>
 #include <thread>

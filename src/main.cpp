@@ -4,7 +4,7 @@
 #include "config.hpp"
 #include "UI/ui.hpp"
 #include "utils/Requests/requests.hpp"
-#include "utils/QuestDiscord/quest_discord.hpp"
+#include "../shared/utils/quest_discord.hpp"
 
 #include "config.h"
 

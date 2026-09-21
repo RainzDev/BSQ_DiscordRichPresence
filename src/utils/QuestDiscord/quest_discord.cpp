@@ -1,4 +1,4 @@
-#include "quest_discord.hpp"
+#include "../shared/utils/quest_discord.hpp"
 
 #include "config.hpp"
 #include "main.hpp"
@@ -28,6 +28,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+
 
 namespace {
     constexpr jlong kApplicationId = 1028340906740420711LL;
