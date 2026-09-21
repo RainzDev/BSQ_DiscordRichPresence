@@ -1,6 +1,6 @@
 #include "nlohmann/json.hpp"
 #include "config.hpp"
-#include "config.h"
+#include "../shared/config.h"
 #include "beatsaber-hook/shared/config/config-utils.hpp"
 #include "main.hpp"
 #include "web-utils/shared/WebUtils.hpp"

@@ -59,6 +59,7 @@ jobs:
           restore: true
           resolve_ndk: true
           cache: true
+          publish_token: ${{ secrets.QPM_KEY }}
 
       - name: Build & Create QMOD
         run: |

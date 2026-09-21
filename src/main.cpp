@@ -6,7 +6,7 @@
 #include "utils/Requests/requests.hpp"
 #include "../shared/utils/quest_discord.hpp"
 
-#include "config.h"
+#include "../shared/config.h"
 
 #include "nlohmann/json_fwd.hpp"
 #include "web-utils/shared/WebUtils.hpp"
