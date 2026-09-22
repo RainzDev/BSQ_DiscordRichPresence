@@ -12,8 +12,7 @@
 #include <tuple> // tie
 #include <utility> // move
 
-#include <nlohmann/detail/abi_macros.hpp>
-
+#include "detail/abi_macros.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 
 /// @brief an internal type for a backed binary type

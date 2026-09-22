@@ -21,12 +21,11 @@
 #include <utility> // move
 #include <vector> // vector
 
-#include <nlohmann/detail/exceptions.hpp>
-#include <nlohmann/detail/macro_scope.hpp>
-#include <nlohmann/detail/string_concat.hpp>
-#include <nlohmann/detail/string_escape.hpp>
-#include <nlohmann/detail/value_t.hpp>
-
+#include "exceptions.hpp"
+#include "macro_scope.hpp"
+#include "string_concat.hpp"
+#include "string_escape.hpp"
+#include "value_t.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 
 /// @brief JSON Pointer defines a string syntax for identifying a specific value within a JSON document

@@ -17,9 +17,8 @@
 #include <utility> // pair
 #include <vector> // vector
 
-#include <nlohmann/detail/macro_scope.hpp>
-#include <nlohmann/detail/meta/type_traits.hpp>
-
+#include "detail/macro_scope.hpp"
+#include "detail/meta/type_traits.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 
 /// ordered_map: a minimal map-like container that preserves insertion order

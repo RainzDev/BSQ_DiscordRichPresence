@@ -11,9 +11,8 @@
 #include <initializer_list>
 #include <utility>
 
-#include <nlohmann/detail/abi_macros.hpp>
-#include <nlohmann/detail/meta/type_traits.hpp>
-
+#include "abi_macros.hpp"
+#include "meta/type_traits.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {

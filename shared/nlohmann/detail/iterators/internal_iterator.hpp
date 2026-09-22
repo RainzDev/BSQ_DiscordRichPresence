@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include <nlohmann/detail/abi_macros.hpp>
-#include <nlohmann/detail/iterators/primitive_iterator.hpp>
-
+#include "../abi_macros.hpp"
+#include "primitive_iterator.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {

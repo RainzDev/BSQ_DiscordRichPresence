@@ -10,11 +10,10 @@
 
 #include <utility>
 
-#include <nlohmann/detail/abi_macros.hpp>
-#include <nlohmann/detail/conversions/from_json.hpp>
-#include <nlohmann/detail/conversions/to_json.hpp>
-#include <nlohmann/detail/meta/identity_tag.hpp>
-
+#include "detail/abi_macros.hpp"
+#include "detail/conversions/from_json.hpp"
+#include "detail/conversions/to_json.hpp"
+#include "detail/meta/identity_tag.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 
 /// @sa https://json.nlohmann.me/api/adl_serializer/

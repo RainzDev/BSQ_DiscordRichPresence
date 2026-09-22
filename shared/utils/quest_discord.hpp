@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../shared/config.h"
+#include "../config.h"
 
 #include <string>
 #include <ctime>
 
-#include "nlohmann/json.hpp"
+#include "../nlohmann/json.hpp"
 
 namespace QuestDiscord {
     struct EXPORT PresenceState {

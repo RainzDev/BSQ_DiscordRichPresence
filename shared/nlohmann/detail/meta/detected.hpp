@@ -10,8 +10,7 @@
 
 #include <type_traits>
 
-#include <nlohmann/detail/meta/void_t.hpp>
-
+#include "void_t.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {

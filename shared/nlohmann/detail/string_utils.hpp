@@ -11,8 +11,7 @@
 #include <cstddef> // size_t
 #include <string> // string, to_string
 
-#include <nlohmann/detail/abi_macros.hpp>
-
+#include "abi_macros.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {

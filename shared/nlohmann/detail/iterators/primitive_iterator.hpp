@@ -11,8 +11,7 @@
 #include <cstddef> // ptrdiff_t
 #include <limits>  // numeric_limits
 
-#include <nlohmann/detail/macro_scope.hpp>
-
+#include "../macro_scope.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {

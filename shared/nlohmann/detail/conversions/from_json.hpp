@@ -20,15 +20,14 @@
 #include <utility> // pair, declval
 #include <valarray> // valarray
 
-#include <nlohmann/detail/exceptions.hpp>
-#include <nlohmann/detail/macro_scope.hpp>
-#include <nlohmann/detail/meta/cpp_future.hpp>
-#include <nlohmann/detail/meta/identity_tag.hpp>
-#include <nlohmann/detail/meta/std_fs.hpp>
-#include <nlohmann/detail/meta/type_traits.hpp>
-#include <nlohmann/detail/string_concat.hpp>
-#include <nlohmann/detail/value_t.hpp>
-
+#include "../exceptions.hpp"
+#include "../macro_scope.hpp"
+#include "../meta/cpp_future.hpp"
+#include "../meta/identity_tag.hpp"
+#include "../meta/std_fs.hpp"
+#include "../meta/type_traits.hpp"
+#include "../string_concat.hpp"
+#include "../value_t.hpp"
 // include after macro_scope.hpp
 #ifdef JSON_HAS_CPP_17
     #include <optional> // optional

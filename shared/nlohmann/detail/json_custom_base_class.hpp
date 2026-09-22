@@ -10,8 +10,7 @@
 
 #include <type_traits> // conditional, is_same
 
-#include <nlohmann/detail/abi_macros.hpp>
-
+#include "abi_macros.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {

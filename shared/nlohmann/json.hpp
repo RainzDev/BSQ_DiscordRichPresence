@@ -31,37 +31,36 @@
 #include <utility> // declval, forward, move, pair, swap
 #include <vector> // vector
 
-#include <nlohmann/adl_serializer.hpp>
-#include <nlohmann/byte_container_with_subtype.hpp>
-#include <nlohmann/detail/conversions/from_json.hpp>
-#include <nlohmann/detail/conversions/to_json.hpp>
-#include <nlohmann/detail/exceptions.hpp>
-#include <nlohmann/detail/hash.hpp>
-#include <nlohmann/detail/input/binary_reader.hpp>
-#include <nlohmann/detail/input/input_adapters.hpp>
-#include <nlohmann/detail/input/lexer.hpp>
-#include <nlohmann/detail/input/parser.hpp>
-#include <nlohmann/detail/iterators/internal_iterator.hpp>
-#include <nlohmann/detail/iterators/iter_impl.hpp>
-#include <nlohmann/detail/iterators/iteration_proxy.hpp>
-#include <nlohmann/detail/iterators/json_reverse_iterator.hpp>
-#include <nlohmann/detail/iterators/primitive_iterator.hpp>
-#include <nlohmann/detail/json_custom_base_class.hpp>
-#include <nlohmann/detail/json_pointer.hpp>
-#include <nlohmann/detail/json_ref.hpp>
-#include <nlohmann/detail/macro_scope.hpp>
-#include <nlohmann/detail/string_concat.hpp>
-#include <nlohmann/detail/string_escape.hpp>
-#include <nlohmann/detail/string_utils.hpp>
-#include <nlohmann/detail/meta/cpp_future.hpp>
-#include <nlohmann/detail/meta/type_traits.hpp>
-#include <nlohmann/detail/output/binary_writer.hpp>
-#include <nlohmann/detail/output/output_adapters.hpp>
-#include <nlohmann/detail/output/serializer.hpp>
-#include <nlohmann/detail/value_t.hpp>
-#include <nlohmann/json_fwd.hpp>
-#include <nlohmann/ordered_map.hpp>
-
+#include "adl_serializer.hpp"
+#include "byte_container_with_subtype.hpp"
+#include "detail/conversions/from_json.hpp"
+#include "detail/conversions/to_json.hpp"
+#include "detail/exceptions.hpp"
+#include "detail/hash.hpp"
+#include "detail/input/binary_reader.hpp"
+#include "detail/input/input_adapters.hpp"
+#include "detail/input/lexer.hpp"
+#include "detail/input/parser.hpp"
+#include "detail/iterators/internal_iterator.hpp"
+#include "detail/iterators/iter_impl.hpp"
+#include "detail/iterators/iteration_proxy.hpp"
+#include "detail/iterators/json_reverse_iterator.hpp"
+#include "detail/iterators/primitive_iterator.hpp"
+#include "detail/json_custom_base_class.hpp"
+#include "detail/json_pointer.hpp"
+#include "detail/json_ref.hpp"
+#include "detail/macro_scope.hpp"
+#include "detail/string_concat.hpp"
+#include "detail/string_escape.hpp"
+#include "detail/string_utils.hpp"
+#include "detail/meta/cpp_future.hpp"
+#include "detail/meta/type_traits.hpp"
+#include "detail/output/binary_writer.hpp"
+#include "detail/output/output_adapters.hpp"
+#include "detail/output/serializer.hpp"
+#include "detail/value_t.hpp"
+#include "json_fwd.hpp"
+#include "ordered_map.hpp"
 #if defined(JSON_HAS_CPP_17)
     #if JSON_HAS_STATIC_RTTI
         #include <any>
@@ -5301,6 +5300,5 @@ inline void swap(nlohmann::NLOHMANN_BASIC_JSON_TPL& j1, nlohmann::NLOHMANN_BASIC
     #endif
 #endif
 
-#include <nlohmann/detail/macro_unscope.hpp>
-
+#include "detail/macro_unscope.hpp"
 #endif  // INCLUDE_NLOHMANN_JSON_HPP_

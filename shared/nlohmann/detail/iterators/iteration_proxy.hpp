@@ -17,11 +17,10 @@
     #include <ranges> // enable_borrowed_range
 #endif
 
-#include <nlohmann/detail/abi_macros.hpp>
-#include <nlohmann/detail/meta/type_traits.hpp>
-#include <nlohmann/detail/string_utils.hpp>
-#include <nlohmann/detail/value_t.hpp>
-
+#include "../abi_macros.hpp"
+#include "../meta/type_traits.hpp"
+#include "../string_utils.hpp"
+#include "../value_t.hpp"
 NLOHMANN_JSON_NAMESPACE_BEGIN
 namespace detail
 {
