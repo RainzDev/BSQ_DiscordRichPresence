@@ -899,9 +899,33 @@ namespace {
         }
     }
 
+    void SendCustomActivity(const std::string& activity) {
+        auto parsed = nlohmann::json::parse(activity);
+
+        nlohmann::json frame = {
+            {"cmd", "SET_ACTIVITY"},
+            {"args", {{"pid", getpid()}, {"activity", parsed}}},
+            {"nonce", std::to_string(g_nonce.fetch_add(1))}
+        };
+        try {
+            GetFrameDispatcher().Enqueue(std::move(frame));
+        } catch (const std::exception& e) {
+            logger.error("SendCustomActivity failed to enqueue activity: {}", e.what());
+        }
+    }
+
     void SendCustomFrame(const nlohmann::json& frame) {
         try {
             GetFrameDispatcher().Enqueue(frame);
+        } catch (const std::exception& e) {
+            logger.error("SendCustomFrame failed to enqueue frame: {}", e.what());
+        }
+    }
+
+    void SendCustomFrame(const std::string& frame) {
+        try {
+            auto parsed = nlohmann::json::parse(frame);
+            GetFrameDispatcher().Enqueue(parsed);
         } catch (const std::exception& e) {
             logger.error("SendCustomFrame failed to enqueue frame: {}", e.what());
         }
@@ -955,6 +979,20 @@ namespace QuestDiscord {
         }
     }
 
+     void SendCustomActivity(const std::string& activity) {
+        try {
+            auto parsed = nlohmann::json::parse(activity);
+            nlohmann::json frame = {
+                {"cmd", "SET_ACTIVITY"},
+                {"args", {{"pid", getpid()}, {"activity", parsed}}},
+                {"nonce", std::to_string(g_nonce.fetch_add(1))}
+            };
+            GetFrameDispatcher().Enqueue(std::move(frame));
+        } catch (const std::exception& e) {
+            logger.error("QuestDiscord::SendCustomActivity failed: {}", e.what());
+        }
+    }
+
     void SendCustomFrame(const nlohmann::json& frame) {
         try {
             GetFrameDispatcher().Enqueue(frame);
@@ -962,6 +1000,16 @@ namespace QuestDiscord {
             logger.error("QuestDiscord::SendCustomFrame failed: {}", e.what());
         }
     }
+
+    void SendCustomFrame(const std::string& frame) {
+        try {
+            auto parsed = nlohmann::json::parse(frame);
+            GetFrameDispatcher().Enqueue(parsed);
+        } catch (const std::exception& e) {
+            logger.error("QuestDiscord::SendCustomFrame failed: {}", e.what());
+        }
+    }
+
     bool Initialize() {
         std::lock_guard<std::mutex> lock(g_jniMutex);
         // Use the same lifetime rule on the Unity path. It is normally already

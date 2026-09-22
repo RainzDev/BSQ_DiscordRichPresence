@@ -32,6 +32,8 @@ namespace QuestDiscord {
     EXPORT nlohmann::json BuildActivity(const PresenceState& state);
     // Library-style API: send a fully custom activity object immediately.
     EXPORT void SendCustomActivity(const nlohmann::json& activity);
+    EXPORT void SendCustomActivity(const std::string& activity);
     // Send a pre-built "frame" object (contains cmd/args/nonce) directly.
     EXPORT void SendCustomFrame(const nlohmann::json& frame);
+    EXPORT void SendCustomFrame(const std::string& frame);
 }
