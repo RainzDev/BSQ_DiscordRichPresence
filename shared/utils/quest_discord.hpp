@@ -22,18 +22,35 @@ namespace QuestDiscord {
         std::time_t pauseStart = 0;
     };
 
+    /// @brief Starts up the Discord Rich Presence connection.
+    /// @return true if the connection was successfully established, false otherwise.
     EXPORT bool Initialize();
+
+    /// @brief Shuts down the Discord Rich Presence connection.
     EXPORT void Shutdown();
+    /// @brief Handles the event state.
+    /// @param event The event JSON object.
     EXPORT void HandleEvent(const nlohmann::json& event);
+    /// @brief Refreshes the Discord Rich Presence connection.
     EXPORT void Refresh();
+    /// @brief Gets the connection status.
     EXPORT std::string GetConnectionStatus();
-    // Used only for diagnostics; this does not load or execute the helper.
+    /// @brief Checks if the helper is available. This does not load or execute the helper.
+    /// @return The string for the whole status indicating if it's ready, specific errors, etc.
     EXPORT bool IsHelperAvailable();
+    /// @brief Builds the activity that should be sent for the given state.
+    /// @return true if the helper is available, false otherwise.
     EXPORT nlohmann::json BuildActivity(const PresenceState& state);
-    // Library-style API: send a fully custom activity object immediately.
+    /// @brief Sends a fully custom activity object immediately.
+    /// @param activity The activity JSON object.
     EXPORT void SendCustomActivity(const nlohmann::json& activity);
+    /// @brief Sends a fully custom activity object immediately.
+    /// @param activity The activity as stringified JSON.
     EXPORT void SendCustomActivity(const std::string& activity);
-    // Send a pre-built "frame" object (contains cmd/args/nonce) directly.
+    /// @brief Send a pre-built "frame" object (contains cmd/args/nonce) directly.
+    /// @param frame The frame JSON object.
     EXPORT void SendCustomFrame(const nlohmann::json& frame);
+    /// @brief Send a pre-built "frame" object (contains cmd/args/nonce) directly.
+    /// @param frame The frame as stringified JSON.
     EXPORT void SendCustomFrame(const std::string& frame);
 }
