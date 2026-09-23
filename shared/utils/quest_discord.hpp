@@ -38,6 +38,14 @@ namespace QuestDiscord {
     /// @brief Checks if the helper is available. This does not load or execute the helper.
     /// @return The string for the whole status indicating if it's ready, specific errors, etc.
     EXPORT bool IsHelperAvailable();
+    /// @brief Gets the current state of the gameplay.
+    /// @param state Details in the current state.
+    /// @return The current state of the gameplay.
+    EXPORT std::string GameplayState(const PresenceState& state);
+    /// @brief Gets the current state of the song.
+    /// @param state Details in the current state.
+    /// @return The current state of the song.
+    EXPORT std::string SongDetails(const PresenceState& state);
     /// @brief Builds the activity that should be sent for the given state.
     /// @return true if the helper is available, false otherwise.
     EXPORT nlohmann::json BuildActivity(const PresenceState& state);
