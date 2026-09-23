@@ -34,9 +34,11 @@ namespace QuestDiscord {
     /// @brief Refreshes the Discord Rich Presence connection.
     EXPORT void Refresh();
     /// @brief Gets the connection status.
-    EXPORT std::string GetConnectionStatus();
-    /// @brief Checks if the helper is available. This does not load or execute the helper.
     /// @return The string for the whole status indicating if it's ready, specific errors, etc.
+    EXPORT std::string GetConnectionStatus();
+    /// @brief Checks if the helper is available.
+    /// @return true if available, false otherwise.
+    /// @note  This does not load or execute the helper.
     EXPORT bool IsHelperAvailable();
     /// @brief Gets the current state of the gameplay.
     /// @param state Details in the current state.
