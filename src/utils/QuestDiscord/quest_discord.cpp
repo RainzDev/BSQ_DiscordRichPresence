@@ -62,19 +62,7 @@ namespace {
     std::string g_lastLoggedConnectionError;
     std::string g_lastLoggedProtocolError;
 
-    struct PresenceState {
-        std::string phase = "MainMenu";
-        nlohmann::json song = nlohmann::json::object();
-        nlohmann::json stats = nlohmann::json::object();
-        int playerCount = 0;
-        int maxPlayerCount = 0;
-        std::string lobbyCode;
-        std::string partyId;
-        std::time_t songStart = 0;
-        std::time_t songEnd = 0;
-        int songLength = 0;
-        std::time_t pauseStart = 0;
-    };
+    using PresenceState = QuestDiscord::PresenceState;
 
     PresenceState g_state;
     std::mutex g_stateMutex;
@@ -760,7 +748,7 @@ namespace {
         return Join(std::vector<std::string>(unique.begin(), unique.end()), ", ");
     }
 
-    std::string SongDetails(const PresenceState& state) {
+    std::string SongDetailsInternal(const PresenceState& state) {
         std::vector<std::string> songParts;
         if (getConfig().QuestShowSongAuthor.GetValue()) songParts.push_back(JsonString(state.song, "author"));
         if (getConfig().QuestShowSongTitle.GetValue()) songParts.push_back(JsonString(state.song, "title"));
@@ -775,7 +763,7 @@ namespace {
         return details;
     }
 
-    std::string GameplayState(const PresenceState& state) {
+    std::string GameplayStateInternal(const PresenceState& state) {
         std::vector<std::string> parts;
         const bool multiplayer = state.phase == "MultiplayerPlaying";
         const bool spectating = state.phase == "Spectating";
@@ -798,7 +786,7 @@ namespace {
         return Join(parts, " | ");
     }
 
-    nlohmann::json BuildActivity(const PresenceState& state) {
+    nlohmann::json BuildActivityInternal(const PresenceState& state) {
         nlohmann::json activity;
         activity["name"] = "Beat Saber";
         activity["type"] = 0;
@@ -812,11 +800,11 @@ namespace {
         } else if (state.phase == "MissionSelect") {
             if (getConfig().QuestShowStatus.GetValue()) stateText = "Status: Campaign Map Selection Menu";
         } else if (state.phase == "Playing" || state.phase == "MultiplayerPlaying" || state.phase == "Spectating") {
-            stateText = GameplayState(state);
-            details = SongDetails(state);
+            stateText = QuestDiscord::GameplayState(state);
+            details = QuestDiscord::SongDetails(state);
         } else if (state.phase == "Paused") {
             if (getConfig().QuestShowStatus.GetValue()) stateText = "Level Paused";
-            details = SongDetails(state);
+            details = QuestDiscord::SongDetails(state);
         } else if (state.phase == "Cleared" || state.phase == "Failed") {
             std::vector<std::string> parts;
             if (getConfig().QuestShowStatus.GetValue()) {
@@ -824,7 +812,7 @@ namespace {
             }
             if (getConfig().QuestShowDifficulty.GetValue()) parts.push_back(JsonString(state.song, "difficulty"));
             stateText = Join(parts, " | ");
-            details = SongDetails(state);
+            details = QuestDiscord::SongDetails(state);
         } else if (state.phase == "Lobby") {
             if (getConfig().QuestShowStatus.GetValue()) details = "Status: Multiplayer Lobby";
             if (getConfig().QuestShowMultiplayer.GetValue()) {
@@ -881,7 +869,7 @@ namespace {
     // Library-facing helper not tied to configuration. Returns the standard
     // activity built from state; callers may modify or send it directly.
     nlohmann::json BuildEffectiveActivity(const PresenceState& state) {
-        return BuildActivity(state);
+        return BuildActivityInternal(state);
     }
 
     // Exported library API implementations (these are also callable when the
@@ -966,7 +954,19 @@ namespace {
 }
 
 namespace QuestDiscord {
-    void SendCustomActivity(const nlohmann::json& activity) {
+    EXPORT std::string GameplayState(const PresenceState& state) {
+        return GameplayStateInternal(state);
+    }
+
+    EXPORT std::string SongDetails(const PresenceState& state) {
+        return SongDetailsInternal(state);
+    }
+
+    EXPORT nlohmann::json BuildActivity(const PresenceState& state) {
+        return BuildActivityInternal(state);
+    }
+
+    EXPORT void SendCustomActivity(const nlohmann::json& activity) {
         try {
             nlohmann::json frame = {
                 {"cmd", "SET_ACTIVITY"},
@@ -979,7 +979,7 @@ namespace QuestDiscord {
         }
     }
 
-     void SendCustomActivity(const std::string& activity) {
+    EXPORT void SendCustomActivity(const std::string& activity) {
         try {
             auto parsed = nlohmann::json::parse(activity);
             nlohmann::json frame = {
@@ -993,7 +993,7 @@ namespace QuestDiscord {
         }
     }
 
-    void SendCustomFrame(const nlohmann::json& frame) {
+    EXPORT void SendCustomFrame(const nlohmann::json& frame) {
         try {
             GetFrameDispatcher().Enqueue(frame);
         } catch (const std::exception& e) {
@@ -1001,7 +1001,7 @@ namespace QuestDiscord {
         }
     }
 
-    void SendCustomFrame(const std::string& frame) {
+    EXPORT void SendCustomFrame(const std::string& frame) {
         try {
             auto parsed = nlohmann::json::parse(frame);
             GetFrameDispatcher().Enqueue(parsed);
@@ -1010,7 +1010,7 @@ namespace QuestDiscord {
         }
     }
 
-    bool Initialize() {
+    EXPORT bool Initialize() {
         std::lock_guard<std::mutex> lock(g_jniMutex);
         // Use the same lifetime rule on the Unity path. It is normally already
         // attached, but the guard also keeps future call sites safe if that ever
@@ -1025,7 +1025,7 @@ namespace QuestDiscord {
         return result;
     }
 
-    void Shutdown() {
+    EXPORT void Shutdown() {
         // Clear the activity while the bridge is still connected. This path is
         // intentionally synchronous because immediately disconnecting first
         // would race and discard the final clear frame.
@@ -1073,7 +1073,7 @@ namespace QuestDiscord {
         logger.info("Quest Discord RPC disconnected");
     }
 
-    void HandleEvent(const nlohmann::json& event) {
+    EXPORT void HandleEvent(const nlohmann::json& event) {
         const std::string type = JsonString(event, "type");
         if (type.empty() || type == "HeartbeatReceiver") return;
         // Special-case custom events that should send user-provided activity
@@ -1211,13 +1211,13 @@ namespace QuestDiscord {
         SendCurrentLocked();
     }
 
-    void Refresh() {
+    EXPORT void Refresh() {
         if (!getConfig().UseQuestDiscord.GetValue()) return;
         std::lock_guard<std::mutex> lock(g_stateMutex);
         SendCurrentLocked();
     }
 
-    std::string GetConnectionStatus() {
+    EXPORT std::string GetConnectionStatus() {
         std::lock_guard<std::mutex> lock(g_jniMutex);
         if (!g_bridge) return g_nativeError.empty() ? "Not connected" : g_nativeError;
         // The status path owns jstring LocalRefs too. Keeping attachment cleanup
@@ -1251,7 +1251,7 @@ namespace QuestDiscord {
         return result;
     }
 
-    bool IsHelperAvailable() {
+    EXPORT bool IsHelperAvailable() {
         // access() is a read-only packaging diagnostic used by the startup log;
         // it does not load the DEX or initiate a Discord service binding.
         return access(kHelperSource, R_OK) == 0;
