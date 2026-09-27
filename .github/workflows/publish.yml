@@ -52,6 +52,8 @@ jobs:
           restore: true
           resolve_ndk: true
           cache: true
+          publish: 'late'
+          version: ${{ github.event.inputs.release_ver }}
           publish_token: ${{ secrets.QPM_KEY }}
 
       - name: Build & Create QMOD
