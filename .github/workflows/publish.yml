@@ -52,9 +52,7 @@ jobs:
           restore: true
           resolve_ndk: true
           cache: true
-          publish: 'late'
           version: ${{ github.event.inputs.release_ver }}
-          publish_token: ${{ secrets.QPM_KEY }}
 
       - name: Build & Create QMOD
         run: |
@@ -98,3 +96,14 @@ jobs:
             build/${{ steps.names.outputs.LIB }}
             build/debug/debug_${{ steps.names.outputs.LIB }}
             ${{ steps.names.outputs.QMOD }}
+
+      - name: Publish QPM metadata
+        env:
+          QPM_TOKEN: ${{ secrets.QPM_KEY }}
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          qpm package edit-extra \
+            --soLink "https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.release_ver }}/${{ steps.names.outputs.LIB }}" \
+            --debugSoLink "https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.release_ver }}/debug_${{ steps.names.outputs.LIB }}" \
+            --modLink "https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.release_ver }}/${{ steps.names.outputs.QMOD }}"
+          qpm publish "$QPM_TOKEN"
