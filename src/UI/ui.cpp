@@ -24,10 +24,12 @@
 using namespace GlobalNamespace;
 
 namespace {
-    // The Mods settings screen is approximately 116 units wide. Leave a small
-    // margin for its mask and scrollbar while allowing labels to use nearly
-    // the full panel instead of the stock prefab's narrower 90-unit geometry.
-    constexpr float SettingsPanelRowWidth = 112.0f;
+    // The custom mod settings panel is narrower than the stock full-screen
+    // prefab, but it still needs to use the full available content width rather
+    // than a hard-coded 90/112 unit row that clips labels and switches against
+    // the mask. Let the layout expand to the parent width and reserve only the
+    // right-side switch space.
+    constexpr float SettingsPanelRowWidth = 128.0f;
     constexpr float SettingsPanelToggleHeight = 8.0f;
 
     void ReserveTextRow(TMPro::TextMeshProUGUI* text, float height) {
@@ -60,13 +62,13 @@ namespace {
         auto* layout = object->GetComponent<UnityEngine::UI::LayoutElement*>();
         if (!layout) layout = object->AddComponent<UnityEngine::UI::LayoutElement*>();
         if (layout) {
-            // BSML copies Beat Saber's 90-unit fullscreen settings prefab.
-            // The Mods settings panel is narrower, so retaining that width
-            // pushes most of the caption behind the panel mask. Give every
-            // toggle one panel-sized row with a stable height instead.
-            layout->set_minWidth(SettingsPanelRowWidth);
-            layout->set_preferredWidth(SettingsPanelRowWidth);
-            layout->set_flexibleWidth(0.0f);
+            // Keep the row height stable, but do not force the whole toggle to a
+            // narrow fixed width. That width is what pushes text behind the panel
+            // mask in the mod settings view. The parent layout should define the
+            // available width; this code only reserves the switch space.
+            layout->set_minWidth(0.0f);
+            layout->set_preferredWidth(0.0f);
+            layout->set_flexibleWidth(1.0f);
             layout->set_minHeight(SettingsPanelToggleHeight);
             layout->set_preferredHeight(SettingsPanelToggleHeight);
         }
@@ -77,17 +79,19 @@ namespace {
             ? switchTransform->get_gameObject()->GetComponent<UnityEngine::RectTransform*>()
             : nullptr;
         constexpr float switchWidth = 10.0f;
+        constexpr float switchInset = 1.5f;
 
         if (auto nameTransform = root->Find("NameText")) {
             auto nameRect = nameTransform.cast<UnityEngine::RectTransform>();
-            // The caption owns the row up to the switch. This is deliberately
-            // anchor-based so all privacy labels remain separate from their
-            // switches as the scroll view lays out or rebuilds its contents.
+            // Keep the label inside the available panel width while leaving room
+            // for the switch on the right. Anchoring to the full width avoids the
+            // clipping that happened when the row itself was forced to a hardcoded
+            // width and the text was still anchored to the stock prefab.
             nameRect->set_anchorMin({0.0f, 0.0f});
             nameRect->set_anchorMax({1.0f, 1.0f});
             nameRect->set_pivot({0.5f, 0.5f});
-            nameRect->set_offsetMin({0.5f, 0.0f});
-            nameRect->set_offsetMax({-(switchWidth + 1.5f), 0.0f});
+            nameRect->set_offsetMin({1.0f, 0.0f});
+            nameRect->set_offsetMax({-(switchWidth + switchInset), 0.0f});
             if (toggle->text) {
                 toggle->text->set_alignment(TMPro::TextAlignmentOptions::MidlineLeft);
                 toggle->text->set_enableWordWrapping(false);
@@ -103,7 +107,7 @@ namespace {
             switchRect->set_anchorMin({1.0f, 0.5f});
             switchRect->set_anchorMax({1.0f, 0.5f});
             switchRect->set_pivot({1.0f, 0.5f});
-            switchRect->set_anchoredPosition({-0.5f, 0.0f});
+            switchRect->set_anchoredPosition({-0.75f, 0.0f});
             const auto currentSize = switchRect->get_sizeDelta();
             switchRect->set_sizeDelta({switchWidth, currentSize.y});
         }
