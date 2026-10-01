@@ -93,6 +93,8 @@
 #include "beatsaverplusplus/shared/BeatSaver.hpp"
 #include "beatsaverplusplus/shared/Models/Beatmap.hpp"
 
+#include "../shared/utils/cache_handler.hpp"
+
 using namespace GlobalNamespace;
 
 bool inMultiplayerGameplay = false;
@@ -473,15 +475,24 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
     // standard BeatmapInitialized shape; without it, the companion leaves
     // inBeatmap false, ignores every later stat update, and remains in Main Menu.
     if (hash.empty()) {
-        nlohmann::json data = beatmapSnapshot;
-        data["type"] = "BeatmapInitialized";
-        data["coverURL"] = nullptr;
+        QuestDiscord::Cache::GetCoverCache([beatmapLevel, beatmapSnapshot](nlohmann::json jsonData) {
+            nlohmann::json data = beatmapSnapshot;
+            for (const auto& entry : jsonData) {
+                std::string name = entry["name"].get<std::string>();
+                if (name == beatmapLevel->levelID + ".png") {
+                    data["type"] = "BeatmapInitialized";
+                    data["coverURL"] = entry["download_url"];
+                    SendPresenceEvent(data);
+                }
+            }
 
-        logger.info("Using local metadata for an OST level in {} mode",
-                    getConfig().UseQuestDiscord.GetValue()
-                        ? "Quest Discord"
-                        : "Desktop Companion");
-        SendPresenceEvent(data);
+            if (!data.contains("coverURL")) {
+                data["type"] = "BeatmapInitialized";
+                data["coverURL"] = nullptr;
+                SendPresenceEvent(data);
+            }
+        });
+
         return;
     }
 
@@ -490,10 +501,24 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
         // Publish local metadata immediately for custom songs as well. The
         // BeatSaver request below becomes an optional cover-art enhancement,
         // so an offline API cannot suppress the entire playing presence.
-        nlohmann::json data = beatmapSnapshot;
-        data["type"] = "BeatmapInitialized";
-        data["coverURL"] = nullptr;
-        SendPresenceEvent(data);
+        QuestDiscord::Cache::GetCoverCache([beatmapLevel, beatmapSnapshot](nlohmann::json jsonData) {
+            nlohmann::json data = beatmapSnapshot;
+            for (const auto& entry : jsonData) {
+                std::string name = entry["name"].get<std::string>();
+                if (name == beatmapLevel->levelID + ".png") {
+                    data["type"] = "BeatmapInitialized";
+                    data["coverURL"] = entry["download_url"];
+                    SendPresenceEvent(data);
+                }
+            }
+
+            if (!data.contains("coverURL")) {
+                data["type"] = "BeatmapInitialized";
+                data["coverURL"] = nullptr;
+                SendPresenceEvent(data);
+            }
+
+        });
     }
 
     // A failed asynchronous request stores its error in the future. Handle that
@@ -913,5 +938,6 @@ extern "C" EXPORT void late_load() noexcept {
     } catch (...) {
         logger.error("late_load startup diagnostics failed with a non-standard exception");
     }
+    QuestDiscord::Cache::RefreshCoverCache();
     logger.info("Completed load!");
 }
