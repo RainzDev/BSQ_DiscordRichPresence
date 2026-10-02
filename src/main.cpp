@@ -501,24 +501,10 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_StartStandardLevel,
         // Publish local metadata immediately for custom songs as well. The
         // BeatSaver request below becomes an optional cover-art enhancement,
         // so an offline API cannot suppress the entire playing presence.
-        QuestDiscord::Cache::GetCoverCache([beatmapLevel, beatmapSnapshot](nlohmann::json jsonData) {
-            nlohmann::json data = beatmapSnapshot;
-            for (const auto& entry : jsonData) {
-                std::string name = entry["name"].get<std::string>();
-                if (name == beatmapLevel->levelID + ".png") {
-                    data["type"] = "BeatmapInitialized";
-                    data["coverURL"] = entry["download_url"];
-                    SendPresenceEvent(data);
-                }
-            }
-
-            if (!data.contains("coverURL")) {
-                data["type"] = "BeatmapInitialized";
-                data["coverURL"] = nullptr;
-                SendPresenceEvent(data);
-            }
-
-        });
+        nlohmann::json data = beatmapSnapshot;
+        data["type"] = "BeatmapInitialized";
+        data["coverURL"] = nullptr;
+        SendPresenceEvent(data);
     }
 
     // A failed asynchronous request stores its error in the future. Handle that
