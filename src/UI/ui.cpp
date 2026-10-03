@@ -316,7 +316,7 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
 
     if (!self) return;
 
-    if (firstActivation) {
+    if (firstActivation && !getConfig().HideVisibilityWarnings.GetValue() && getConfig().UseQuestDiscord.GetValue()) {
         const std::string qdStatus = QuestDiscord::GetConnectionStatus();
         if (qdStatus.find("Discord RPC service was not found. Install Discord and apply the Beat Saber package-visibility patch.")) {
             auto modal = BSML::Lite::CreateModal(self->transform, {100, 40}, []() {});
