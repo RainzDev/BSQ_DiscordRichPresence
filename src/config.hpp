@@ -8,6 +8,7 @@ DECLARE_CONFIG(Config) {
     CONFIG_VALUE(PCIPSetting, std::string, "Private IP", "");
     CONFIG_VALUE(PortSetting, std::string, "Port", "8080");
     CONFIG_VALUE(FirstTime, bool, "First Time", true);
+    CONFIG_VALUE(HideVisibilityWarnings, bool, "Hide Visibility Warning", false);
 
     // Keep Quest transport/privacy settings separate from the desktop payload;
     // switching back to the companion therefore preserves its original format.

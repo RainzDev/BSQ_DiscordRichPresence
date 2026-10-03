@@ -318,9 +318,7 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
 
     if (firstActivation) {
         const std::string qdStatus = QuestDiscord::GetConnectionStatus();
-        if (qdStatus.find("ERROR") != std::string::npos ||
-            qdStatus.find("CLOSED") != std::string::npos ||
-            qdStatus == "Not connected") {
+        if (qdStatus.find("Discord RPC service was not found. Install Discord and apply the Beat Saber package-visibility patch.")) {
             auto modal = BSML::Lite::CreateModal(self->transform, {100, 40}, []() {});
             // UI creation is optional and can fail under a replaced/custom menu;
             // abort this informational popup without affecting the main menu.
@@ -334,6 +332,11 @@ MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::Did
                 text->set_enableWordWrapping(true);
                 text->set_alignment(TMPro::TextAlignmentOptions::Center);
             }
+
+            auto checkbox = BSML::Lite::CreateToggle(verticalLayout, "Do not show this message again", false, [](bool enabled) {
+                if (enabled) getConfig().HideVisibilityWarnings.SetValue(true);
+                else getConfig().HideVisibilityWarnings.SetValue(false);
+            });
 
             auto horizontalLayout = BSML::Lite::CreateHorizontalLayoutGroup(verticalLayout);
             if (!horizontalLayout) return;
