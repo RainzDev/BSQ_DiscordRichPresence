@@ -310,10 +310,6 @@ MAKE_HOOK_MATCH(ModalView_HandleParentViewControllerDidDeactivate, &HMUI::ModalV
 MAKE_HOOK_MATCH(MainMenuViewController_DidActivate, &MainMenuViewController::DidActivate, void, MainMenuViewController* self, bool firstActivation, bool addedToHierachy, bool screenSystemEnabling) {
     MainMenuViewController_DidActivate(self, firstActivation, addedToHierachy, screenSystemEnabling);
 
-    // Desktop companion setup and update checks remain exactly as before, but
-    // are irrelevant when presence is routed directly to the Quest Discord app.
-    if (getConfig().UseQuestDiscord.GetValue()) return;
-
     if (!self) return;
 
     if (firstActivation && !getConfig().HideVisibilityWarnings.GetValue() && getConfig().UseQuestDiscord.GetValue()) {
