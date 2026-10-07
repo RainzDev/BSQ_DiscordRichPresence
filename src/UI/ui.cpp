@@ -66,9 +66,9 @@ namespace {
             // narrow fixed width. That width is what pushes text behind the panel
             // mask in the mod settings view. The parent layout should define the
             // available width; this code only reserves the switch space.
-            layout->set_minWidth(0.0f);
-            layout->set_preferredWidth(0.0f);
-            layout->set_flexibleWidth(1.0f);
+            //layout->set_minWidth(0.0f);
+            //layout->set_preferredWidth(0.0f);
+            //layout->set_flexibleWidth(1.0f);
             layout->set_minHeight(SettingsPanelToggleHeight);
             layout->set_preferredHeight(SettingsPanelToggleHeight);
         }
